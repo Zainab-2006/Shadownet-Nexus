@@ -15,8 +15,8 @@ const toAxiosConfig = (url: string, config?: AxiosRequestConfig): AxiosRequestCo
     url: normalizeApiPath(url),
   };
 
-  if (typeof (config as any)?.body !== 'undefined' && typeof nextConfig.data === 'undefined') {
-    const rawBody = (config as any).body;
+  if ('body' in (config || {}) && config.body !== undefined && typeof nextConfig.data === 'undefined') {
+    const rawBody = config.body as unknown;
     if (typeof rawBody === 'string') {
       try {
         nextConfig.data = JSON.parse(rawBody);
@@ -26,7 +26,8 @@ const toAxiosConfig = (url: string, config?: AxiosRequestConfig): AxiosRequestCo
     } else {
       nextConfig.data = rawBody;
     }
-    delete (nextConfig as any).body;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+delete (nextConfig as any).body;
   }
 
   return nextConfig;
@@ -44,12 +45,13 @@ class ApiClient {
     });
 
     this.client.interceptors.request.use(
-      (config: AxiosRequestConfig<any>) => {
+(config: AxiosRequestConfig<unknown>) => {
         const token = localStorage.getItem('token');
         if (token) {
-          (config.headers as any).Authorization = `Bearer ${token}`;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+config.headers = { ...(config.headers || {}), Authorization: `Bearer ${token}` } as any;
         }
-        return config as any;
+return config as AxiosRequestConfig;
       },
       (error: AxiosError) => Promise.reject(error),
     );
@@ -71,34 +73,34 @@ class ApiClient {
     );
   }
 
-  request<T = any>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
+  request<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<unknown>> {
     return this.client.request<T>(toAxiosConfig(url, config));
   }
 
-  get<T = any>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
+  get<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<unknown>> {
     return this.client.get<T>(normalizeApiPath(url), config);
   }
 
-  post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
+  post<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<AxiosResponse<unknown>> {
     return this.client.post<T>(normalizeApiPath(url), data, config);
   }
 
-  put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
+  put<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<AxiosResponse<unknown>> {
     return this.client.put<T>(normalizeApiPath(url), data, config);
   }
 
-  delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
+  delete<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<unknown>> {
     return this.client.delete<T>(normalizeApiPath(url), config);
   }
 }
 
 export const apiClient = new ApiClient();
-export const apiGet = <T = any>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => apiClient.get<T>(url, config);
-export const apiPost = <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => apiClient.post<T>(url, data, config);
-export const apiPut = <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => apiClient.put<T>(url, data, config);
-export const apiDelete = <T = any>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => apiClient.delete<T>(url, config);
+export const apiGet = <T = unknown>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => apiClient.get<T>(url, config);
+export const apiPost = <T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => apiClient.post<T>(url, data, config);
+export const apiPut = <T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => apiClient.put<T>(url, data, config);
+export const apiDelete = <T = unknown>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => apiClient.delete<T>(url, config);
 
-export const apiFetch = async <T = any>(url: string, config?: AxiosRequestConfig): Promise<T> => {
+export const apiFetch = async <T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T> => {
   const response = await apiClient.request<T>(url, config);
   return response.data;
 };

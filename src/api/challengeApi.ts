@@ -3,15 +3,22 @@ import { useQuery } from '@tanstack/react-query';
 
 export interface Challenge {
   id: string;
+  _id?: string;
   name: string;
   title: string;
   category: string;
   difficulty: string;
   points: number;
+  value?: number;
   description: string;
   author: string;
   solves: number;
+  solveCount?: number;
   isSolved: boolean;
+  solved?: boolean;
+  attachments?: any[];
+  files?: any[];
+  stages?: unknown;
 }
 
 export const useChallenges = () => {

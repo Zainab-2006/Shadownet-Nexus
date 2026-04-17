@@ -20,7 +20,7 @@ interface NarratorPayload {
   event: NarratorEvent;
   title: string;
   message: string;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
   dismissible?: boolean;
 }
 

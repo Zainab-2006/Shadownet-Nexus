@@ -109,7 +109,7 @@ const buildProgression = (user: User | null): UserProgression | null => {
   };
 };
 
-const normalizeOperator = (raw: any): Operator => {
+const normalizeOperator = (raw: unknown): Operator => {
   const name = String(raw?.name ?? 'Unknown Operator').trim();
   const role = String(raw?.role ?? 'Operative').trim();
   const abilitySource = typeof raw?.abilities === 'string' ? raw.abilities : '[]';
@@ -119,8 +119,8 @@ const normalizeOperator = (raw: any): Operator => {
     const parsed = JSON.parse(abilitySource);
     skills = Array.isArray(parsed) ? parsed.map((value) => String(value).trim()).filter(Boolean) : [];
   } catch {
-    skills = abilitySource
-      .replace(/[\[\]"]/g, '')
+  skills = abilitySource
+      .replace(/[\\[\\]"\\]]/g, '')
       .split(/[,|]/)
       .map((value) => value.trim())
       .filter(Boolean);
@@ -153,7 +153,7 @@ const normalizeOperator = (raw: any): Operator => {
 };
 
 const fetchOperators = async (): Promise<Operator[]> => {
-  const operators = await apiFetch<any[]>('/operators');
+  const operators = await apiFetch<unknown[]>('/operators');
   return Array.isArray(operators) ? operators.map(normalizeOperator) : [];
 };
 

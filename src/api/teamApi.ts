@@ -20,14 +20,14 @@ export const teamApi = {
   createSession: async (): Promise<Team> => {
     return apiFetch('/team/create', {
       method: 'POST',
-      body: JSON.stringify({}),
+      data: JSON.stringify({}),
     });
   },
 
   joinSession: async (sessionCode: string): Promise<{ status: string }> => {
     return apiFetch('/team/join', {
       method: 'POST',
-      body: JSON.stringify({ teamId: sessionCode }),
+      data: JSON.stringify({ teamId: sessionCode }),
     });
   },
 
@@ -38,7 +38,7 @@ export const teamApi = {
   setReady: async (sessionCode: string, ready: boolean): Promise<{ status: string }> => {
     return apiFetch(`/team/${sessionCode}/ready`, {
       method: 'POST',
-      body: JSON.stringify({ ready }),
+      data: JSON.stringify({ ready }),
     });
   },
 

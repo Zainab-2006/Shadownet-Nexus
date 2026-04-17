@@ -111,7 +111,7 @@ const Missions = () => {
   const isLoading = missionsQuery.isLoading;
   const types = ['all', 'corporate_espionage', 'data_heist', 'infrastructure_attack', 'cyber_warfare', 'Data Heist', 'Cyber Defense'];
 
-  const filteredMissions = missionsData.filter((m: Mission) => filter === 'all' || m.type === filter);
+  const filteredMissions = missionsData.filter(m => filter === 'all' || m.type === filter);
 
   const { openNarrator } = useNarrator();
 
@@ -136,8 +136,8 @@ const Missions = () => {
     }
 
     createTeamMutation.mutate(selectedMission.id, {
-      onSuccess: (session: any) => {
-        const createdTeamId = session?.teamId || session?.id;
+      onSuccess: (session: { teamId?: string; id: string }) => {
+        const createdTeamId = session.teamId || session.id;
         if (createdTeamId) enterMissionRuntime(selectedMission, createdTeamId);
       },
     });

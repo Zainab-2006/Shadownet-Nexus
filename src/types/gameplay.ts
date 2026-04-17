@@ -1,7 +1,7 @@
 export interface GameplayState {
   selectedOperator: string | null;
   trust: Record<string, number>;
-  missionProgress: Record<string, any>;
+  missionProgress: Record<string, unknown>;
   storyEvidence: StoryEvidence[];
   unlockedMissions: string[];
   recommendedMissions: string[];

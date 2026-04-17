@@ -62,6 +62,7 @@ export const useUserProfile = () => {
   });
 };
 
-export const refreshUserProgress = (queryClient: any) => {
-  queryClient.invalidateQueries({ queryKey: ['userProgress'] });
+export const refreshUserProgress = (queryClient: unknown): void => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(queryClient as any).invalidateQueries({ queryKey: ['userProgress'] });
 };

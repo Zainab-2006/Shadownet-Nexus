@@ -4,7 +4,7 @@ import SockJS from 'sockjs-client';
 import { WS_BASE } from '@/lib/config';
 
 interface UseWebSocketProps {
-  onMessage?: (topic: string, data: any) => void;
+  onMessage?: (topic: string, data: unknown) => void;
   teamId?: string;
 }
 

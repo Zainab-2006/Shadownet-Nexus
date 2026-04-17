@@ -86,6 +86,7 @@ const normalizeSkills = (abilities?: string): string[] => {
       return parsed.map((skill) => String(skill).trim()).filter(Boolean);
     }
   } catch {
+    // Parse error, continue with string parsing
   }
 
   return abilities
@@ -179,7 +180,7 @@ export const useSelectedOperator = () => {
   return useQuery<Operator | null>({
     queryKey: ['selectedOperator'],
     queryFn: async () => {
-      const user = await apiFetch<any>('/users/me');
+      const user = await apiFetch<unknown>('/users/me');
       if (!user.selectedOperator) return null;
       const operators = await apiFetch<BackendOperatorDto[]>('/operators');
       return operators.map(toOperator).find((op) => op.id === user.selectedOperator) || null;

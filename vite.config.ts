@@ -14,8 +14,23 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
     proxy: {
       '/api': {
-target: 'http://localhost:3001',
-        changeOrigin: true
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            console.log('Proxying', req.method, req.url);
+          });
+          proxy.on('error', (err, req, res) => {
+            console.log('Proxy ERROR', req.url, err.message);
+            res.writeHead(500, {
+              'Content-Type': 'text/plain',
+            });
+            res.end('Proxy Error');
+          });
+          proxy.on('proxyRes', (proxyRes, req, res) => {
+            console.log('Proxy Response', req.method, req.url, proxyRes.statusCode);
+          });
+        }
       }
     },
     hmr: {

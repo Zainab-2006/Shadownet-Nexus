@@ -17,7 +17,7 @@ services:
       - key: DATABASE_URL
         sync: false
       - key: DB_USERNAME
-        value: root
+        sync: false
       - key: DB_PASSWORD
         sync: false
       - key: JWT_SECRET

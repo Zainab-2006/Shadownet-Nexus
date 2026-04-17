@@ -74,7 +74,7 @@ const handleOpenOnboarding = useCallback(() => {
       login(result.token, result.user);
       handleOpenOnboarding();
       navigate('/operators');
-    } catch (err: any) {
+    } catch (err: unknown) {
       const message = err?.response?.data?.message || err?.response?.data?.error || err?.message || 'Registration failed';
       setError(message);
     }

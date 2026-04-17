@@ -94,7 +94,7 @@ export const storyApi = {
   makeDecision: (request: DecisionRequest): Promise<DecisionResponse> =>
     apiFetch('/story/decision', {
       method: 'POST',
-      body: JSON.stringify(request),
+      data: JSON.stringify(request),
     }),
   resetProgress: (): Promise<void> => apiPost('/story/progress/reset').then(() => undefined),
 };

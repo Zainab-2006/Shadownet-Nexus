@@ -7,7 +7,8 @@ interface BackendMission {
   missionType?: string;
   difficulty?: string;
   story?: string;
-  meta?: string | Record<string, any>;
+  meta?: Record<string, unknown>;
+
   objectives?: string | string[];
   timeLimitSeconds?: number;
   xpReward?: number;
@@ -36,14 +37,14 @@ export interface MissionRuntimeState {
 
 type MissionAction = 'START' | 'UNLOCK' | 'COMPLETE' | 'RECOMMEND';
 
-const parseJsonObject = (value?: string | Record<string, any>) => {
-  if (!value) return {} as Record<string, any>;
+const parseJsonObject = (value?: string | Record<string, unknown>) => {
+  if (!value) return {} as Record<string, unknown>;
   if (typeof value !== 'string') return value;
 
   try {
-    return JSON.parse(value) as Record<string, any>;
+    return JSON.parse(value) as Record<string, unknown>;
   } catch {
-    return {} as Record<string, any>;
+    return {} as Record<string, unknown>;
   }
 };
 
@@ -230,7 +231,7 @@ export const useCreateTeam = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (missionId?: string) =>
-      apiFetch<any>('/team/create', {
+      apiFetch<unknown>('/team/create', {
         method: 'POST',
         body: JSON.stringify({ missionId }),
       }),
@@ -245,7 +246,7 @@ export const useJoinTeam = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (teamId: string) =>
-      apiFetch<any>('/team/join', {
+      apiFetch<unknown>('/team/join', {
         method: 'POST',
         body: JSON.stringify({ teamId }),
       }),

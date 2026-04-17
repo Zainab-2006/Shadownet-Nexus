@@ -31,7 +31,12 @@ const mockScene = {
 
 const mockSelectedOperator = { id: '1', codename: 'TestOp' };
 
-const MockGameProvider: React.FC<{ children: React.ReactNode; value?: any }> = ({ children, value }) => (
+interface MockProviderProps {
+  children: React.ReactNode;
+  value?: unknown;
+}
+
+const MockGameProvider: React.FC<MockProviderProps> = ({ children }) => (
   <div data-testid="mock-game-provider">{children}</div>
 );
 
@@ -61,11 +66,31 @@ const renderWithProviders = (ui: React.ReactElement, initialEntry: string, route
 describe('Story Runtime Verification', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(storyApi.useGetSceneQuery).mockReturnValue({ data: mockScene, isLoading: false } as any);
-    vi.mocked(storyApi.useMakeDecisionMutation).mockReturnValue({ mutate: vi.fn(), isPending: false } as any);
-    vi.mocked(gameContext.useGame).mockReturnValue({ selectedOperator: mockSelectedOperator } as any);
-    vi.mocked(operatorApi.useCharacters).mockReturnValue({ data: [mockSelectedOperator], isLoading: false } as any);
+    vi.mocked(storyApi.useGetSceneQuery).mockReturnValue({
+      data: mockScene,
+      isLoading: false,
+      isError: false,
+      error: null
+    } as any);
+    vi.mocked(storyApi.useMakeDecisionMutation).mockReturnValue({
+      mutate: vi.fn(),
+      isPending: false,
+      isError: false,
+      error: null,
+      data: null,
+      reset: vi.fn(),
+      status: 'idle'
+    } /* as any */);
+
+
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    vi.mocked(gameContext.useGame).mockReturnValue({ selectedOperator: mockSelectedOperator } /* as any */);
+    vi.mocked(operatorApi.useCharacters).mockReturnValue({ data: [mockSelectedOperator], isLoading: false } /* as any */);
+
+    /* eslint-enable @typescript-eslint/no-explicit-any */
   });
+
+
 
   it('OperatorStory renders operator details', () => {
     renderWithProviders(<OperatorStory />, '/story/operator/1', '/story/operator/:id');
@@ -81,17 +106,38 @@ describe('Story Runtime Verification', () => {
 
   it('StoryScene handles choice interaction', async () => {
     const mockMutate = vi.fn();
-    vi.mocked(storyApi.useMakeDecisionMutation).mockReturnValue({ mutate: mockMutate, isPending: false } as any);
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    vi.mocked(storyApi.useMakeDecisionMutation).mockReturnValue({
+      mutate: mockMutate as any,
+      isPending: false,
+      isError: false,
+      error: null,
+      data: null,
+      reset: vi.fn(),
+      status: 'idle'
+    } as any);
+    /* eslint-enable @typescript-eslint/no-explicit-any */
+
 
     const { getByText } = renderWithProviders(<StoryScene />, '/story/operator/1/scene/1', '/story/operator/:id/scene/:sceneId');
+
 
     fireEvent.click(getByText('Choice 1'));
     await waitFor(() => expect(mockMutate).toHaveBeenCalled());
   });
 
   it('StoryScene shows loading state', () => {
-    vi.mocked(storyApi.useGetSceneQuery).mockReturnValue({ data: null, isLoading: true } as any);
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    vi.mocked(storyApi.useGetSceneQuery).mockReturnValue({
+      data: null,
+      isLoading: true,
+      isError: false,
+      error: null
+    } as any);
+    /* eslint-enable @typescript-eslint/no-explicit-any */
+
     renderWithProviders(<StoryScene />, '/story/operator/1/scene/1', '/story/operator/:id/scene/:sceneId');
     expect(screen.getByText('Loading scene...')).toBeInTheDocument();
   });
+
 });

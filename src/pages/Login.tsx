@@ -35,7 +35,7 @@ const Login = () => {
       // Unified token/user contract
       login(result.token, result.user);
       navigate('/operators');
-    } catch (err: any) {
+  } catch (err: unknown) {
       const message = err?.response?.data?.message || err?.response?.data?.error || err?.message || 'Login failed';
       setError(message);
     }

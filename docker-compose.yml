@@ -8,8 +8,6 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
-    env_file:
-      - .env
     environment:
       VITE_API_URL: http://localhost:3001/api
       VITE_WS_URL: http://localhost:3001
@@ -23,8 +21,6 @@ services:
     build: ./springboot
     ports:
       - "3001:3001"
-    env_file:
-      - .env
     environment:
       SPRING_PROFILES_ACTIVE: prod
       DATABASE_URL: jdbc:mysql://db:3306/shadownet?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC

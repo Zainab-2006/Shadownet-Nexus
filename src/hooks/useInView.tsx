@@ -14,23 +14,28 @@ export const useInView = (options: UseInViewOptions = {}) => {
     if (entry.isIntersecting) {
       setInView(true);
       if (options.triggerOnce) {
-        observer?.disconnect();
+        observerRef.current?.disconnect();
       }
     }
   }, [options.triggerOnce]);
 
+  const observerRef = useRef<IntersectionObserver | null>(null);
+
   useEffect(() => {
-    const observer = new IntersectionObserver(callback, {
+    observerRef.current = new IntersectionObserver(callback, {
       rootMargin: options.margin || '0px',
       threshold: options.threshold || 0.1,
     });
 
     if (ref.current) {
-      observer.observe(ref.current);
+      observerRef.current.observe(ref.current);
     }
 
-    return () => observer.disconnect();
-  }, [callback]);
+    return () => {
+      observerRef.current?.disconnect();
+    };
+  }, [callback, options]); // Added full options object
+
 
   return [ref, inView] as const;
 };

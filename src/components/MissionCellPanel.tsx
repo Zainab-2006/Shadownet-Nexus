@@ -40,13 +40,13 @@ type TeamState = {
     reason?: string;
     gameplayEffect?: string;
   };
-  activity: Array<{ type: string; data: any; timestamp: string }>;
+  data: unknown;
   accusationUnlocked: boolean;
   accusationTargetPool?: Array<string | { id: string; label?: string; name?: string; codename?: string }>;
 };
 
 const MissionCellPanel = ({ teamId = '', missionId }: MissionCellPanelProps) => {
-  const [messages, setMessages] = useState<Array<any>>([]);
+  const [messages, setMessages] = useState<Array<unknown>>([]);
   const [accusedId, setAccusedId] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
@@ -97,7 +97,7 @@ const MissionCellPanel = ({ teamId = '', missionId }: MissionCellPanelProps) => 
     onSuccess: () => refreshProgression()
   });
 
-  const teamState = teamData as TeamState | null;
+const teamState = teamData as TeamState | null;
   const isReady = teamState?.players.find(p => p.id === user?.id)?.ready || false;
   const isLeader = teamState?.players.find(p => p.id === user?.id)?.role === 'leader';
 

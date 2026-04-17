@@ -54,7 +54,8 @@ const StoryScene = () => {
   const hasValidPovVariant = React.useMemo(() => {
     if (!scene?.operatorPovVariants || !selectedOperator?.id) return false;
     return !!scene.operatorPovVariants[selectedOperator.id];
-  }, [scene?.operatorPovVariants, selectedOperator?.id]);
+  }, [scene?.operatorPovVariants, selectedOperator]);
+
 
   React.useEffect(() => {
     if (!hasValidPovVariant && operatorId && !povFallbackUsed) {
@@ -119,7 +120,7 @@ const StoryScene = () => {
   const povVariant = React.useMemo(() => {
     if (!selectedOperator || !scene?.operatorPovVariants) return '';
     return scene.operatorPovVariants[selectedOperator.id] || '';
-  }, [scene?.operatorPovVariants, selectedOperator?.id]);
+  }, [scene?.operatorPovVariants, selectedOperator]);
 
   if (isLoading || !selectedOperator || selectedOperator.id !== operatorId) {
     return (

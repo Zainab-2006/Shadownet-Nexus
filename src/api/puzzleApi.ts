@@ -5,7 +5,7 @@ export interface PuzzleSession {
   id: string;
   currentStage: number;
   hintsUsed: number;
-  challenge: any;
+  challenge: unknown;
   completed: boolean;
 }
 
@@ -22,16 +22,16 @@ export interface SubmitStagePayload {
   narratorTriggered?: boolean;
 }
 
-export const submitStage = (payload: SubmitStagePayload): Promise<any> =>
+export const submitStage = (payload: SubmitStagePayload): Promise<unknown> =>
   apiFetch('/puzzle/submit', {
     method: 'POST',
-    body: JSON.stringify(payload)
+    data: JSON.stringify(payload)
   });
 
-export const getHint = (sessionId: string): Promise<any> =>
+export const getHint = (sessionId: string): Promise<unknown> =>
   apiFetch('/puzzle/hint', {
     method: 'POST',
-    body: JSON.stringify({ sessionId })
+    data: JSON.stringify({ sessionId })
   });
 
 export const usePuzzleSession = (challengeId: string) => {

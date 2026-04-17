@@ -4,8 +4,8 @@ import { apiFetch } from '@/lib/apiClient';
 
 interface AuthContextType {
   token: string | null;
-  user: any;
-  login: (token: string, user: any) => void;
+  user: unknown;
+  login: (token: string, user: unknown) => void;
   logout: () => void;
   isValidating: boolean;
 }
@@ -14,7 +14,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [token, setToken] = useState<string | null>(null);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<unknown>(null);
 
   const { data: validatedUser, isLoading: validating } = useQuery({
     queryKey: ['user'],
@@ -58,7 +58,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [validatedUser, token]);
 
-  const login = (newToken: string, newUser: any) => {
+  const login = (newToken: string, newUser: unknown) => {
     localStorage.setItem('token', newToken);
     localStorage.setItem('user', JSON.stringify(newUser));
     setToken(newToken);

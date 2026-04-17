@@ -24,7 +24,7 @@ const OperatorStory = () => {
   const { data: charactersData } = useCharacters();
 
   const allCharacters = charactersData || [];
-  const character = allCharacters.find((c: Operator) => c.id === id) || selectedOperator || allCharacters[0] as Operator;
+  const character = allCharacters.find(c => c.id === id) || selectedOperator || allCharacters[0] as Operator;
 
   if (!character) {
     return null;
@@ -176,7 +176,7 @@ const OperatorStory = () => {
                     variant={activeTab === id ? 'secondary' : 'ghost'}
                     size="sm"
                     className="justify-start h-auto py-2.5 capitalize font-mono tracking-wider text-xs"
-                    onClick={() => setActiveTab(id as any)}
+onClick={() => setActiveTab(id as 'overview' | 'backstory' | 'dossier' | 'missions')}
                   >
                     <Icon className="w-4 h-4 mr-2 flex-shrink-0 opacity-75" />
                     {label}
