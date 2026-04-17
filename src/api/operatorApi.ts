@@ -90,7 +90,9 @@ const normalizeSkills = (abilities?: string): string[] => {
   }
 
   return abilities
-    .replace(/[\[\]"]/g, '')
+    .replaceAll('[', '')
+    .replaceAll(']', '')
+    .replaceAll('"', '')
     .split(/[,|]/)
     .map((skill) => skill.trim())
     .filter(Boolean);

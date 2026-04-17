@@ -16,8 +16,8 @@ export interface Challenge {
   solveCount?: number;
   isSolved: boolean;
   solved?: boolean;
-  attachments?: any[];
-  files?: any[];
+  attachments?: unknown[];
+  files?: unknown[];
   stages?: unknown;
 }
 

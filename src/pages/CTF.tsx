@@ -121,8 +121,20 @@ interface ChallengeModalProps {
   onSolve: (challengeId: string) => void;
   showLearning: boolean;
   onToggleLearning: () => void;
-  openNarrator: (payload: any) => void;
+  openNarrator: (payload: { event: string; title: string; message: string; dismissible: boolean }) => void;
 }
+
+type PuzzleChallengePayload = {
+  stages?: unknown;
+};
+
+const getPuzzleChallengeStages = (challenge: unknown): unknown => {
+  if (typeof challenge === 'object' && challenge !== null && 'stages' in challenge) {
+    return (challenge as PuzzleChallengePayload).stages;
+  }
+
+  return undefined;
+};
 
 const ChallengeModal = ({
   challenge,
@@ -150,7 +162,7 @@ const ChallengeModal = ({
   const { data: session, isLoading: sessionLoading } = usePuzzleSession(challenge?.id || '');
   const submitStageMut = useSubmitStage();
   const getHintMut = useGetHint();
-  const activeStages = parseChallengeStages(session?.challenge?.stages ?? (challenge as any)?.stages);
+  const activeStages = parseChallengeStages(getPuzzleChallengeStages(session?.challenge) ?? challenge?.stages);
   const stageCount = Math.max(activeStages.length, 1);
   const activeStage = activeStages[currentStage - 1];
   const isCaesarCipher = challenge?.id === 'crypto-001' || challenge?.name?.toLowerCase() === 'caesar cipher';
@@ -533,7 +545,7 @@ const CTF = () => {
     queryFn: () => apiFetch<Challenge[]>('/challenges'),
   });
 
-  const normalizeChallenge = (serverCh: any): Challenge => ({
+  const normalizeChallenge = (serverCh: Challenge): Challenge => ({
     id: serverCh.id || serverCh._id || `fallback-${Math.random()}`,
     name: serverCh.name || serverCh.title || 'Unknown Challenge',
     title: serverCh.title || serverCh.name || 'Unknown Challenge',
