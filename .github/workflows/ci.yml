@@ -1,6 +1,7 @@
 name: CI
 
 on:
+  workflow_dispatch:
   push:
     branches: [main, master]
   pull_request:
@@ -28,6 +29,7 @@ jobs:
           nl -ba src/api/operatorApi.ts | sed -n '90,96p'
           nl -ba src/pages/CTF.tsx | sed -n '121,126p'
           nl -ba src/test/storyRuntimeVerification.test.tsx | sed -n '70,88p'
+          ! grep -R "attachments?: any\\[\\]\\|files?: any\\[\\]\\|replace(/\\[\\\\\\[\\\\\\]\\\"\\]/g\\|as any" src/api/challengeApi.ts src/api/operatorApi.ts src/pages/CTF.tsx src/test/storyRuntimeVerification.test.tsx
 
       - name: Run lint
         run: npm run lint
