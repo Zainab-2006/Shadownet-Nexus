@@ -1,0 +1,54 @@
+services:
+  mysql-test:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_HOST: '%'
+      MYSQL_DATABASE: shadownet_test
+      MYSQL_USER: test_user
+      MYSQL_PASSWORD: root
+    ports:
+      - "3307:3305"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  backend-test:
+    build:
+      context: ./springboot
+      dockerfile: Dockerfile.test
+    environment:
+      SPRING_PROFILES_ACTIVE: test
+      DB_URL: jdbc:mysql://mysql-test:3305/shadownet_test?useSSL=false&serverTimezone=UTC
+      DB_USERNAME: test_user
+      DB_PASSWORD: root
+    ports:
+      - "8081:8080"
+    depends_on:
+      mysql-test:
+        condition: service_healthy
+
+  cypress:
+    image: cypress/included:13.6.0
+    working_dir: /e2e
+    volumes:
+      - ./cypress:/e2e/cypress
+      - ./cypress.config.ts:/e2e/cypress.config.ts
+    environment:
+      CYPRESS_baseUrl: http://localhost:3000
+    depends_on:
+      - frontend-test
+    command: cypress run
+
+  frontend-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    environment:
+      VITE_API_URL: http://backend-test:8080
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend-test
+

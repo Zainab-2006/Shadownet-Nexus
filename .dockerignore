@@ -1,0 +1,8 @@
+node_modules
+dist
+target
+springboot/target
+.mysql-data
+.mysql-run
+*.log
+.git
