@@ -21,6 +21,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Verify lint source
+        run: |
+          git rev-parse HEAD
+          nl -ba src/api/challengeApi.ts | sed -n '15,22p'
+          nl -ba src/api/operatorApi.ts | sed -n '90,96p'
+          nl -ba src/pages/CTF.tsx | sed -n '121,126p'
+          nl -ba src/test/storyRuntimeVerification.test.tsx | sed -n '70,88p'
+
       - name: Run lint
         run: npm run lint
 
