@@ -35,6 +35,33 @@ Invoke-WebRequest http://localhost:3001/api/challenges
 Invoke-WebRequest http://localhost:3001/api/operators
 ```
 
+## Render Backend Deployment
+
+Use this when deploying only the backend on Render.
+
+Render settings:
+
+- Runtime: `Docker`
+- Root Directory: `springboot`
+- Dockerfile Path: `./Dockerfile`
+- Health Check Path: `/actuator/health`
+
+Environment variables:
+
+- `SPRING_PROFILES_ACTIVE=prod`
+- `DATABASE_URL=jdbc:mysql://YOUR_MYSQL_HOST:3306/YOUR_DB?useSSL=true&allowPublicKeyRetrieval=true&serverTimezone=UTC`
+- `DB_USERNAME=root`
+- `DB_PASSWORD=root`
+- `JWT_SECRET=your-64-char-secret`
+- `CORS_ORIGINS=https://your-vercel.vercel.app`
+- `DRIVER_CLASS=com.mysql.cj.jdbc.Driver`
+- `HIBERNATE_DIALECT=org.hibernate.dialect.MySQLDialect`
+- `SECURE_COOKIES=true`
+
+Important: Render cannot use your local Docker MySQL at `127.0.0.1:3305`. For Render, `DATABASE_URL` must point to a publicly reachable or private-network reachable MySQL database.
+
+This repo also includes `render.yaml` so Render can detect the Docker web service from the GitHub repo.
+
 ## GitHub Repo
 
 This folder is not currently a Git repository. To push it:

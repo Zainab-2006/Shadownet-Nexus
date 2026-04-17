@@ -33,7 +33,7 @@ jwt:
   expiration: ${JWT_EXPIRATION:86400000}
 
 server:
-  port: ${SERVER_PORT:3001}
+  port: ${PORT:${SERVER_PORT:3001}}
   servlet:
     context-path: /
     session:

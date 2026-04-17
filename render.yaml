@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: shadownet-nexus-backend
+    runtime: docker
+    rootDir: springboot
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /actuator/health
+    autoDeploy: true
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: DRIVER_CLASS
+        value: com.mysql.cj.jdbc.Driver
+      - key: HIBERNATE_DIALECT
+        value: org.hibernate.dialect.MySQLDialect
+      - key: DATABASE_URL
+        sync: false
+      - key: DB_USERNAME
+        value: root
+      - key: DB_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: SECURE_COOKIES
+        value: "true"
