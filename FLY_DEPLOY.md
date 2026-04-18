@@ -2,7 +2,7 @@
 
 This repo can run on Fly.io as two Fly apps:
 
-- `shadownet-nexus-backend`: Spring Boot API, built from `Dockerfile.render`
+- `shadownet-nexus-backend`: Spring Boot API, built from `Dockerfile`
 - `shadownet-nexus-mysql`: private MySQL 8 app with a persistent Fly volume
 
 Fly does not deploy `docker-compose.yml` directly. The backend connects to MySQL through Fly private networking at:
