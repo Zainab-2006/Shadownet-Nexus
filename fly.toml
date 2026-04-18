@@ -1,0 +1,26 @@
+app = "shadownet-nexus-backend"
+primary_region = "bom"
+
+[build]
+  dockerfile = "Dockerfile.render"
+
+[env]
+  SPRING_PROFILES_ACTIVE = "prod"
+  DATABASE_URL = "jdbc:mysql://shadownet-nexus-mysql.internal:3306/shadownet?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+  DB_USERNAME = "shadownet"
+  DRIVER_CLASS = "com.mysql.cj.jdbc.Driver"
+  HIBERNATE_DIALECT = "org.hibernate.dialect.MySQLDialect"
+  SECURE_COOKIES = "true"
+  CORS_ORIGINS = "https://your-vercel-frontend.vercel.app"
+
+[http_service]
+  internal_port = 3001
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[vm]]
+  memory = "1gb"
+  cpu_kind = "shared"
+  cpus = 1
