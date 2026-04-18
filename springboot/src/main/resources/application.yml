@@ -4,7 +4,7 @@ spring:
 
   datasource:
     url: ${DATABASE_URL:jdbc:mysql://127.0.0.1:3305/shadownet?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true}
-    username: ${DB_USERNAME:${DATABASE_USER:shadownet}}
+    username: ${DB_USERNAME:${DATABASE_USER:}}
     password: ${DB_PASSWORD:${DATABASE_PASSWORD:}}
     driver-class-name: ${DRIVER_CLASS:com.mysql.cj.jdbc.Driver}
   jpa:
