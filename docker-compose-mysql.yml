@@ -2,11 +2,11 @@ services:
   db:
     image: mysql:8.0
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-change-me-local-only-root}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
       MYSQL_ROOT_HOST: '%'
       MYSQL_DATABASE: shadownet
       MYSQL_USER: shadownet
-      MYSQL_PASSWORD: ${DB_PASSWORD:-change-me-local-only}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-root}
     ports:
       - "3305:3306"
     volumes:

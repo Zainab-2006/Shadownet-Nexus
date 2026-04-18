@@ -96,7 +96,7 @@ spring:
   datasource:
     url: jdbc:mysql://127.0.0.1:3306/shadownet?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     username: shadownet
-    password: ${DB_PASSWORD:change-me-local-only}
+    password: ${DB_PASSWORD:root}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
