@@ -5,7 +5,7 @@ spring:
   datasource:
     url: ${DATABASE_URL:jdbc:mysql://127.0.0.1:3305/shadownet?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true}
     username: ${DB_USERNAME:${DATABASE_USER:shadownet}}
-    password: ${DB_PASSWORD:${DATABASE_PASSWORD:root}}
+    password: ${DB_PASSWORD:${DATABASE_PASSWORD:}}
     driver-class-name: ${DRIVER_CLASS:com.mysql.cj.jdbc.Driver}
   jpa:
     hibernate:
@@ -29,7 +29,7 @@ spring:
       max-age: 3600
 
 jwt:
-  secret: ${JWT_SECRET:default-nexus-dev-secret-please-change-in-production-with-64-random-chars}
+  secret: ${JWT_SECRET:}
   expiration: ${JWT_EXPIRATION:86400000}
 
 server:
@@ -96,7 +96,7 @@ spring:
   datasource:
     url: jdbc:mysql://127.0.0.1:3306/shadownet?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     username: shadownet
-    password: root
+    password: ${DB_PASSWORD:change-me-local-only}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
