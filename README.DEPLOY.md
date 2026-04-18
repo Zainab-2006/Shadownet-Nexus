@@ -35,9 +35,9 @@ Invoke-WebRequest http://localhost:3001/api/challenges
 Invoke-WebRequest http://localhost:3001/api/operators
 ```
 
-## Fly.io Backend Deployment
+## Oracle Cloud Deployment
 
-See `FLY_DEPLOY.md` for Fly.io backend and MySQL deployment.
+See `ORACLE_DEPLOY.md` for Oracle Cloud Always Free VM deployment.
 
 ## GitHub Repo
 

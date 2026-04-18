@@ -218,6 +218,6 @@ For production:
 1. Use MySQL instead of H2
 2. Set proper JWT secret key
 3. Enable HTTPS/SSL
-4. Deploy on Fly.io, AWS, or similar
+4. Deploy on Oracle Cloud, AWS, or similar
 
 See `deploy/k8s/` for Kubernetes configuration examples.
