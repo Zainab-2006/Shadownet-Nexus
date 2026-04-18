@@ -161,10 +161,11 @@ public class StoryService {
                 Long previousChoiceId = choicesMade.get(currentScene.getId());
                 boolean isDuplicate = previousChoiceId != null;
 
-                var chosenChoice = currentScene.getChoices().stream()
+                var requestedChoice = currentScene.getChoices().stream()
                                 .filter(c -> c.getId().equals(request.getChoiceId()))
                                 .findFirst()
                                 .orElseThrow(() -> new RuntimeException("Invalid choice"));
+                var chosenChoice = requestedChoice;
 
                 Long nextSceneId = chosenChoice.getNextSceneId();
                 Long nextChapterId = null;
@@ -172,8 +173,12 @@ public class StoryService {
 
                 if (isDuplicate) {
                         if (!previousChoiceId.equals(request.getChoiceId())) {
-                                throw new IllegalStateException(
-                                                "Story decision already locked for this scene. Reload story state before continuing.");
+                                chosenChoice = currentScene.getChoices().stream()
+                                                .filter(c -> c.getId().equals(previousChoiceId))
+                                                .findFirst()
+                                                .orElse(chosenChoice);
+                                nextSceneId = chosenChoice.getNextSceneId();
+                                flags.add("conflicting_decision_ignored");
                         }
                         flags.add("duplicate_decision_ignored");
                         // Safe replay - compute next from the already-recorded choice.

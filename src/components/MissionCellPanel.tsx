@@ -45,8 +45,15 @@ type TeamState = {
   accusationTargetPool?: Array<string | { id: string; label?: string; name?: string; codename?: string }>;
 };
 
+type CellMessage = {
+  text?: string;
+  timestamp?: string;
+  userId?: string | number;
+  username?: string;
+};
+
 const MissionCellPanel = ({ teamId = '', missionId }: MissionCellPanelProps) => {
-  const [messages, setMessages] = useState<Array<unknown>>([]);
+  const [messages, setMessages] = useState<CellMessage[]>([]);
   const [accusedId, setAccusedId] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
@@ -131,8 +138,8 @@ const teamState = teamData as TeamState | null;
         </h3>
         {/* Squad List */}
         <div className="space-y-3 max-h-48 overflow-y-auto">
-          {teamState.players.map((player) => (
-            <div key={player.id} className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-accent/30 to-accent/10 border border-accent/50">
+          {teamState.players.map((player, index) => (
+            <div key={player.id || `${player.username || 'player'}-${index}`} className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-accent/30 to-accent/10 border border-accent/50">
               <div className={`w-3 h-3 rounded-full ${player.connected ? 'bg-green-400' : 'bg-red-400'}`} />
               <span className="font-semibold truncate">{player.displayName || player.name || player.username || player.id}</span>
               {player.operatorCodename && <span className="text-xs text-primary">{player.operatorCodename}</span>}
@@ -150,8 +157,8 @@ const teamState = teamData as TeamState | null;
             <p className="mt-1 text-xs text-muted-foreground">{teamState.trust?.gameplayEffect || 'Trust changes mission stability and accusation risk.'}</p>
           </div>
           {Object.entries(teamState.evidence?.items || {}).length > 0 ? (
-            Object.entries(teamState.evidence?.items || {}).map(([type, count]) => (
-              <div key={type} className="rounded-lg border border-emerald-400/40 bg-emerald-500/5 p-3">
+            Object.entries(teamState.evidence?.items || {}).map(([type, count], index) => (
+              <div key={`${type || 'evidence'}-${index}`} className="rounded-lg border border-emerald-400/40 bg-emerald-500/5 p-3">
                 <div className="text-xs font-mono uppercase text-emerald-300">{type}</div>
                 <p className="text-sm">{count} submitted</p>
                 <p className="text-xs text-muted-foreground">{teamState.evidence?.whyItMatters || 'Evidence changes accusation and mission consequences.'}</p>
@@ -177,7 +184,7 @@ const teamState = teamData as TeamState | null;
           {teamState.evidenceCount >= 3 && (
             <select className="w-full p-2 text-xs border rounded" value={accusedId} onChange={(e) => setAccusedId(e.target.value)}>
               <option value="">Select Suspect</option>
-              {suspectOptions.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
+              {suspectOptions.map((s, index) => <option key={`${s.id}-${index}`} value={s.id}>{s.label}</option>)}
             </select>
           )}
         </div>
@@ -185,7 +192,7 @@ const teamState = teamData as TeamState | null;
         <div className="border-t pt-2">
           <div className="h-20 overflow-y-auto text-xs space-y-1 mb-1">
             {messages.slice(-5).map((msg, i) => (
-              <div key={i}><span className="font-mono text-muted-foreground">[recent]</span> {msg.text}</div>
+              <div key={`${msg.timestamp || 'message'}-${msg.userId || 'anon'}-${i}`}><span className="font-mono text-muted-foreground">[recent]</span> {msg.text}</div>
             ))}
           </div>
           <div className="flex gap-1">

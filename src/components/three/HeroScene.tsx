@@ -173,7 +173,9 @@ const HeroScene = ({ className = '' }: HeroSceneProps) => {
             setIsLowPerf(true);
           }
         }
+        gl.getExtension('WEBGL_lose_context')?.loseContext();
       }
+      canvas.remove();
     };
     
     checkPerformance();
@@ -187,6 +189,11 @@ const HeroScene = ({ className = '' }: HeroSceneProps) => {
           antialias: !isLowPerf,
           alpha: true,
           powerPreference: isLowPerf ? 'low-power' : 'high-performance'
+        }}
+        onCreated={({ gl }) => {
+          gl.domElement.addEventListener('webglcontextlost', (event) => {
+            event.preventDefault();
+          });
         }}
       >
         <Suspense fallback={<LoadingFallback />}>

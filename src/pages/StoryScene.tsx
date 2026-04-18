@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, CheckCircle2, Shield } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { CyberButton } from '@/components/ui/cyber-button';
 import { CyberCard, CyberCardContent } from '@/components/ui/cyber-card';
 import Navbar from '@/components/layout/Navbar';
@@ -41,38 +42,29 @@ const StoryScene = () => {
   const { id: operatorId, sceneId } = useParams<{ id: string; sceneId: string }>();
   const sceneNum = parseInt(sceneId || '1', 10);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { selectedOperator } = useGame();
   const { data: scene, isLoading } = useGetSceneQuery(sceneNum);
   const makeDecisionMutation = useMakeDecisionMutation();
+  const submittingRef = React.useRef(false);
 
   const [localChoices, setLocalChoices] = useState<Scene['choices']>([]);
   const [recentDecision, setRecentDecision] = useState<DecisionResponseSummary | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [povFallbackUsed, setPovFallbackUsed] = useState(false);
-
-  // Fix infinite re-render: Move POV logic to useMemo, log warning once only
-  const hasValidPovVariant = React.useMemo(() => {
-    if (!scene?.operatorPovVariants || !selectedOperator?.id) return false;
-    return !!scene.operatorPovVariants[selectedOperator.id];
-  }, [scene?.operatorPovVariants, selectedOperator]);
-
-
-  React.useEffect(() => {
-    if (!hasValidPovVariant && operatorId && !povFallbackUsed) {
-      console.warn(`POV fallback for operator ${operatorId} - no variant found (using operatorId=${operatorId}, selectedOperatorId=${selectedOperator?.id})`);
-      setPovFallbackUsed(true);
-    }
-  }, [hasValidPovVariant, operatorId, selectedOperator?.id, povFallbackUsed]);
 
   useEffect(() => {
     if (scene?.choices) {
       setLocalChoices(scene.choices);
     }
-  }, [scene?.choices]);
+    setRecentDecision(null);
+    submittingRef.current = false;
+    setIsSubmitting(false);
+  }, [scene?.id, scene?.choices]);
 
   const handleChoice = React.useCallback(async (choiceId: number | string) => {
     const choiceIdNum = typeof choiceId === 'string' ? Number(choiceId) : choiceId;
-    if (!scene?.id || isSubmitting || makeDecisionMutation.isPending) return;
+    if (!scene?.id || submittingRef.current || makeDecisionMutation.isPending) return;
+    submittingRef.current = true;
     setIsSubmitting(true);
 
     makeDecisionMutation.mutate(
@@ -106,15 +98,24 @@ const StoryScene = () => {
           }
         },
         onError: (error) => {
-          toast.error(`Decision failed: ${error}`);
+          const response = (error as { response?: { status?: number; data?: { message?: string } } }).response;
+          if (response?.status === 409) {
+            toast.info(response.data?.message || 'Story state changed. Reloading current progress.');
+            queryClient.invalidateQueries({ queryKey: ['storyProgress'] });
+            queryClient.invalidateQueries({ queryKey: ['storyScene'] });
+          } else {
+            toast.error(`Decision failed: ${error}`);
+          }
+          submittingRef.current = false;
           setIsSubmitting(false);
         },
         onSettled: () => {
+          submittingRef.current = false;
           setIsSubmitting(false);
         },
       }
     );
-  }, [scene?.id, isSubmitting, makeDecisionMutation, operatorId, selectedOperator?.id, navigate]);
+  }, [scene?.id, makeDecisionMutation, operatorId, selectedOperator?.id, navigate, queryClient]);
 
   // Safe POV variant (no render side-effects)
   const povVariant = React.useMemo(() => {
@@ -164,11 +165,6 @@ const StoryScene = () => {
             <CyberButton variant="ghost" onClick={() => navigate(`/story/operator/${operatorId}`)}>
               Timeline
             </CyberButton>
-            {povFallbackUsed && (
-              <div className="px-3 py-1 bg-warning/20 text-warning rounded-full text-xs font-mono">
-                POV Fallback Active
-              </div>
-            )}
           </motion.div>
 
           <CyberCard variant="hero" className="mb-8">
