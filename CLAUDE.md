@@ -58,7 +58,7 @@ Forgetting the badge or task report makes your response incomplete. Always inclu
 | `copy.json` | Brand name, taglines, CTAs, page titles, descriptions |
 | `error-codes.json` | Error codes, classes, HTTP status codes, exit codes, messages |
 | `ui-pages.json` | Frontend routes, page components, auth requirements, layouts |
-| `deploy.json` | Railway, Netlify, Docker, K8s, CI/CD pipelines, environments |
+| `deploy.json` | Fly.io, Render, Netlify, Docker, K8s, CI/CD pipelines, environments |
 | `schemas.json` | Database tables, columns, migrations, Zod schemas, API contracts |
 | `routes.json` | Verified API routes, methods, handlers |
 | `env.json` | Verified environment variables |
