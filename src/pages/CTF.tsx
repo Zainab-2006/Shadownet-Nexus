@@ -16,6 +16,7 @@ import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/apiClient';
 import { PuzzleStageView, usePuzzleSession, useSubmitStage, useGetHint } from '@/api/puzzleApi';
 import { Challenge } from '@/api/challengeApi';
+import { generateSoloPCG, submitSoloPCG, PCGChallengeViewDTO } from '@/api/pcgSoloApi';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const categoryColors: Record<string, string> = {
@@ -493,6 +494,10 @@ const CTF = () => {
   const [trainingMode, setTrainingMode] = useState(false);
   const [rankedEligible, setRankedEligible] = useState(true);
   const [narratorOpen, setNarratorOpen] = useState(false);
+  const [pcgChallenge, setPcgChallenge] = useState<PCGChallengeViewDTO | null>(null);
+  const [pcgFlag, setPcgFlag] = useState('');
+  const [pcgResult, setPcgResult] = useState('');
+  const [pcgLoading, setPcgLoading] = useState(false);
 
   const handleTrainingOverride = () => {
     setTrainingMode(true);
@@ -554,6 +559,52 @@ const CTF = () => {
   };
 
   const toggleLearning = () => setShowLearning(!showLearning);
+  const handleGeneratePCG = async () => {
+    setPcgResult('');
+    if (!token) {
+      setPcgResult('Login required to generate a dynamic challenge.');
+      return;
+    }
+
+    try {
+      setPcgLoading(true);
+      const generated = await generateSoloPCG({
+        sessionId: `solo-${new Date().toISOString().slice(0, 10)}`,
+        category: category === 'all' ? undefined : category,
+        difficulty: difficulty === 'all' ? undefined : difficulty,
+      });
+      setPcgChallenge(generated);
+      setPcgFlag('');
+    } catch {
+      setPcgResult('Unable to generate dynamic challenge.');
+    } finally {
+      setPcgLoading(false);
+    }
+  };
+
+  const handleSubmitPCG = async () => {
+    if (!pcgChallenge || !pcgFlag.trim()) return;
+
+    try {
+      setPcgLoading(true);
+      const response = await submitSoloPCG({
+        instanceKey: pcgChallenge.instanceKey,
+        submittedFlag: pcgFlag.trim(),
+      });
+      setPcgResult(`${response.message}${response.pointsAwarded ? ` (+${response.pointsAwarded} pts)` : ''}`);
+      setPcgChallenge({ ...pcgChallenge, status: response.status, attemptCount: pcgChallenge.attemptCount + 1 });
+      if (response.correct) {
+        setPcgFlag('');
+        await Promise.allSettled([refreshProgression(), refreshUserData()]);
+      }
+    } catch {
+      setPcgResult('Submission rejected.');
+      setPcgChallenge((prev) => prev ? { ...prev, attemptCount: prev.attemptCount + 1 } : prev);
+    } finally {
+      setPcgLoading(false);
+    }
+  };
+
   const requireAuthenticatedPuzzleAccess = (challenge?: Challenge | null) => {
     setPuzzleError('');
     if (token) {
@@ -632,6 +683,54 @@ const CTF = () => {
               why="Solo rank depends on clean competitive solves. Training mode teaches the pattern without awarding leaderboard points."
               next="Pick a challenge. Three misses trigger narrator training for that solve."
             />
+
+            <CyberCard className="mb-8">
+              <CyberCardContent className="p-5 pt-5">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div>
+                    <h3 className="font-heading text-lg text-primary">Dynamic PCG Challenge</h3>
+                    <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+                      Generate a backend-owned challenge instance for this session. Answers are validated server-side and no solution data is sent to the browser.
+                    </p>
+                  </div>
+                  <CyberButton variant="secondary" onClick={handleGeneratePCG} disabled={pcgLoading}>
+                    {pcgLoading ? 'Working...' : 'Generate Dynamic'}
+                  </CyberButton>
+                </div>
+
+                {pcgChallenge && (
+                  <div className="mt-5 space-y-4 rounded-lg border border-border bg-secondary/10 p-4">
+                    <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                      <div>
+                        <h4 className="font-heading text-base">{pcgChallenge.title}</h4>
+                        <p className="mt-1 text-sm text-muted-foreground">{pcgChallenge.description}</p>
+                      </div>
+                      <div className="font-mono text-xs text-muted-foreground">
+                        {pcgChallenge.category} / {pcgChallenge.difficulty} / {pcgChallenge.points} pts / {pcgChallenge.status}
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-2 md:flex-row">
+                      <Input
+                        value={pcgFlag}
+                        onChange={(e) => setPcgFlag(e.target.value)}
+                        placeholder="CTF{...}"
+                        disabled={pcgLoading || pcgChallenge.status === 'SOLVED'}
+                        className="font-mono"
+                      />
+                      <CyberButton
+                        variant="primary"
+                        onClick={handleSubmitPCG}
+                        disabled={pcgLoading || !pcgFlag.trim() || pcgChallenge.status === 'SOLVED'}
+                      >
+                        Submit Dynamic
+                      </CyberButton>
+                    </div>
+                  </div>
+                )}
+
+                {pcgResult && <p className="mt-3 text-sm text-muted-foreground">{pcgResult}</p>}
+              </CyberCardContent>
+            </CyberCard>
 
             <div className="mb-8 grid gap-4 md:grid-cols-3">
               <CyberCard><CyberCardContent className="p-4 pt-4"><h3 className="font-heading text-sm text-primary mb-2">Ranked Solve</h3><p className="text-sm text-muted-foreground">Solve cleanly before training triggers. Correct flags award leaderboard points; wrong flags do not.</p></CyberCardContent></CyberCard>

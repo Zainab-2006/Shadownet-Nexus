@@ -54,8 +54,11 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         if (path.equals("/api/login") || path.equals("/api/register") || path.equals("/api/auth/login") || path.equals("/api/auth/register") || path.equals("/api/request-password-reset") || path.equals("/api/reset-password")) {
             return RateLimitType.AUTH;
         }
-        if (path.equals("/api/submit-flag") || path.equals("/api/puzzle/submit")) {
+        if (path.equals("/api/submit-flag") || path.equals("/api/puzzle/submit") || path.equals("/api/pcg/solo/submit")) {
             return RateLimitType.CHALLENGE_SUBMIT;
+        }
+        if (path.equals("/api/pcg/solo/generate")) {
+            return RateLimitType.PCG_GENERATE;
         }
         if (path.equals("/api/puzzle/hint")) {
             return RateLimitType.HINT;
@@ -94,7 +97,8 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         CHALLENGE_SUBMIT(10, 300), 
         HINT(3, 300),           
         TEAM_ACTION(20, 60),
-        CONTAINER_SPAWN(5, 300);
+        CONTAINER_SPAWN(5, 300),
+        PCG_GENERATE(10, 300);
     
         public final int maxAttempts;
         public final int windowSeconds;
