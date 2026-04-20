@@ -59,6 +59,8 @@ public class TeamSessionService {
 
     public TeamSessionViewDTO toViewDTO(TeamSession session) {
         return TeamSessionViewDTO.builder()
+                .id(session.getTeamId())
+                .teamId(session.getTeamId())
                 .sessionId(session.getTeamId())
                 .missionId(session.getMissionId())
                 .phase(mapPhase(session.getStatus()))

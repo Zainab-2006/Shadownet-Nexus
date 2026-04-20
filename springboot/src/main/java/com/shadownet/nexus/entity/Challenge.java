@@ -1,5 +1,6 @@
 package com.shadownet.nexus.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -85,6 +86,7 @@ public class Challenge {
         this.description = description;
     }
 
+    @JsonIgnore
     public String getFlagHash() {
         return flagHash;
     }
@@ -137,6 +139,7 @@ public class Challenge {
     private String dockerImage;
 
     @Column(columnDefinition = "TEXT")
+    @JsonIgnore
     public String getStages() {
         return stages;
     }
@@ -146,6 +149,7 @@ public class Challenge {
     }
 
     @Column(columnDefinition = "TEXT")
+    @JsonIgnore
     public String getHints() {
         return hints;
     }
@@ -155,6 +159,7 @@ public class Challenge {
     }
 
     @Column(columnDefinition = "TEXT")
+    @JsonIgnore
     public String getExplanation() {
         return explanation;
     }
@@ -163,6 +168,7 @@ public class Challenge {
         this.explanation = explanation;
     }
 
+    @JsonIgnore
     public String getDockerImage() {
         return dockerImage;
     }

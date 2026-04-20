@@ -142,22 +142,11 @@ public class UserController {
 
     @PutMapping({ "/user/story-progress", "/users/me/story-progress" })
     public ResponseEntity<?> setStoryProgress(@RequestBody Map<String, Object> payload, Authentication auth) {
-        try {
-            User user = requireUser(auth);
-            Object progress = payload.get("storyProgress");
-            if (progress == null) {
-                return ResponseEntity.badRequest().body(Map.of("error", "storyProgress is required"));
-            }
-
-            user.setStoryProgress(progress.toString());
-            user.setUpdatedAt(System.currentTimeMillis());
-            userRepository.save(user);
-            return ResponseEntity.ok(Map.of("storyProgress", user.getStoryProgress()));
-        } catch (Exception e) {
-            logger.error("Error updating story progress: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ErrorResponse("INTERNAL_ERROR", "Unable to update story progress", 500));
-        }
+        return ResponseEntity.status(HttpStatus.GONE)
+                .body(new ErrorResponse(
+                        "STORY_PROGRESS_DEPRECATED",
+                        "Client-authored story progress is retired. Use backend-authored story decision endpoints.",
+                        410));
     }
 
     private User requireUser(Authentication auth) {

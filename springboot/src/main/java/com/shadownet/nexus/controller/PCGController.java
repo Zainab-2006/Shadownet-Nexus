@@ -1,6 +1,7 @@
 package com.shadownet.nexus.controller;
 
 import com.shadownet.nexus.entity.Challenge;
+import com.shadownet.nexus.mapper.ChallengeViewMapper;
 import com.shadownet.nexus.service.PCGService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +22,9 @@ public class PCGController {
     @Autowired
     private PCGService pcgService;
 
+    @Autowired
+    private ChallengeViewMapper challengeViewMapper;
+
     @PostMapping("/generate")
     public ResponseEntity<?> generateChallenge(@RequestBody Map<String, Object> body, Authentication auth) {
         try {
@@ -30,7 +34,7 @@ public class PCGController {
 
             Challenge challenge = pcgService.generateDynamicChallenge(seed, sessionId);
             logger.info("PCG challenge generated for user {} session {} seed {}", userId, sessionId, seed);
-            return ResponseEntity.ok(challenge);
+            return ResponseEntity.ok(challengeViewMapper.toPuzzleDto(challenge));
         } catch (Exception e) {
             logger.error("Error generating PCG challenge: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

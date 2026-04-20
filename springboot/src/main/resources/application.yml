@@ -45,8 +45,8 @@ server:
 logging:
   level:
     root: INFO
-    com.shadownet.nexus: DEBUG
-    org.springframework.security: DEBUG
+    com.shadownet.nexus: ${APP_LOG_LEVEL:INFO}
+    org.springframework.security: ${SECURITY_LOG_LEVEL:INFO}
     org.flywaydb: INFO
     AUDIT: INFO
     SECURITY: WARN
@@ -60,7 +60,7 @@ management:
         include: health,info,metrics
   endpoint:
     health:
-      show-details: always
+      show-details: ${HEALTH_SHOW_DETAILS:when_authorized}
 
 springdoc:
   swagger-ui:
@@ -82,6 +82,22 @@ spring:
   flyway:
     enabled: true
 
+logging:
+  level:
+    com.shadownet.nexus: INFO
+    org.springframework.security: WARN
+
+management:
+  endpoint:
+    health:
+      show-details: when_authorized
+
+springdoc:
+  swagger-ui:
+    enabled: ${SWAGGER_ENABLED:false}
+  api-docs:
+    enabled: ${API_DOCS_ENABLED:false}
+
 server:
   servlet:
     session:
@@ -96,7 +112,7 @@ spring:
   datasource:
     url: jdbc:mysql://127.0.0.1:3306/shadownet?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     username: shadownet
-    password: ${DB_PASSWORD:root}
+    password: ${DB_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:

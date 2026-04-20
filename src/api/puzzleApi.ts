@@ -1,11 +1,32 @@
 import { apiFetch } from '../lib/apiClient';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
+export interface PuzzleStageView {
+  briefing?: string;
+  objective?: string;
+  evidence?: string;
+  submitFormat?: string;
+  learningContent?: string;
+}
+
+export interface PuzzleChallenge {
+  id: string;
+  name: string;
+  title?: string;
+  category: string;
+  difficulty: string;
+  points: number;
+  description: string;
+  author?: string;
+  hasDockerRuntime?: boolean;
+  stages: PuzzleStageView[];
+}
+
 export interface PuzzleSession {
   id: string;
   currentStage: number;
   hintsUsed: number;
-  challenge: unknown;
+  challenge: PuzzleChallenge;
   completed: boolean;
 }
 
@@ -22,11 +43,24 @@ export interface SubmitStagePayload {
   narratorTriggered?: boolean;
 }
 
-export const submitStage = (payload: SubmitStagePayload): Promise<unknown> =>
+export interface SubmitStageResponse {
+  correct: boolean;
+  message?: string;
+  showExplanation?: boolean;
+  awardedPoints?: number;
+  ranked?: boolean;
+  trainingMode?: boolean;
+  rankedEligible?: boolean;
+  nextStage?: number;
+  duplicate?: boolean;
+  stale?: boolean;
+}
+
+export const submitStage = (payload: SubmitStagePayload): Promise<SubmitStageResponse> =>
   apiFetch('/puzzle/submit', {
     method: 'POST',
     data: JSON.stringify(payload)
-  });
+  }) as Promise<SubmitStageResponse>;
 
 export const getHint = (sessionId: string): Promise<unknown> =>
   apiFetch('/puzzle/hint', {

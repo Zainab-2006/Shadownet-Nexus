@@ -16,9 +16,10 @@ export interface Challenge {
   solveCount?: number;
   isSolved: boolean;
   solved?: boolean;
+  stages?: unknown;
   attachments?: unknown[];
   files?: unknown[];
-  stages?: unknown;
+  hasDockerRuntime?: boolean;
 }
 
 export const useChallenges = () => {

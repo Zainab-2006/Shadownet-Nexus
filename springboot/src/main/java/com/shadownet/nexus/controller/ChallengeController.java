@@ -4,6 +4,7 @@ import com.shadownet.nexus.config.SecurityConfig;
 import com.shadownet.nexus.dto.ErrorResponse;
 import com.shadownet.nexus.entity.Challenge;
 import com.shadownet.nexus.entity.Solve;
+import com.shadownet.nexus.mapper.ChallengeViewMapper;
 import com.shadownet.nexus.repository.ChallengeRepository;
 import com.shadownet.nexus.repository.SolveRepository;
 import com.shadownet.nexus.service.GameService;
@@ -53,6 +54,9 @@ public class ChallengeController {
     @Autowired
     private EventService eventService;
 
+    @Autowired
+    private ChallengeViewMapper challengeViewMapper;
+
     /**
      * Get all challenges (no IDOR - all users can see all challenges)
      */
@@ -64,7 +68,9 @@ public class ChallengeController {
                 auditLogger.logDataAccess(userId, "CHALLENGE", "*", "LIST", getClientIpAddress(request));
             }
 
-            List<Challenge> challenges = challengeRepository.findAll();
+            List<?> challenges = challengeRepository.findAll().stream()
+                    .map(challengeViewMapper::toListDto)
+                    .toList();
             return ResponseEntity.ok(challenges);
         } catch (Exception e) {
             logger.error("Error retrieving challenges: {}", e.getMessage());
@@ -97,10 +103,11 @@ public class ChallengeController {
             String sanitizedQuery = InputValidator.sanitizeInput(q).toLowerCase();
 
             // Limit search results
-            List<Challenge> results = challengeRepository.findAll().stream()
+            List<?> results = challengeRepository.findAll().stream()
                     .filter(c -> c.getName().toLowerCase().contains(sanitizedQuery) ||
                             c.getDescription().toLowerCase().contains(sanitizedQuery))
                     .limit(50) // Max 50 results
+                    .map(challengeViewMapper::toListDto)
                     .toList();
 
             auditLogger.logDataAccess(userId, "CHALLENGE", "SEARCH", "SEARCH_QUERY: " + sanitizedQuery,
@@ -325,7 +332,7 @@ public class ChallengeController {
                 return ResponseEntity.badRequest().body(Map.of("error", "No puzzles available"));
             }
             auditLogger.logDataAccess(userId, "PUZZLE", challenge.getId(), "START", getClientIpAddress(request));
-            return ResponseEntity.ok(Map.of("challenge", challenge));
+            return ResponseEntity.ok(Map.of("challenge", challengeViewMapper.toPuzzleDto(challenge)));
         } catch (Exception e) {
             logger.error("Error starting puzzle: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Internal error"));

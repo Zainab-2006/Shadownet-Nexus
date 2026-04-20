@@ -92,7 +92,7 @@ export const useLogin = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ email, password }: { email: string; password: string }) => 
-      apiFetch('/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
+      apiFetch('/login', { method: 'POST', data: JSON.stringify({ email, password }) }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['user'] }),
   });
 };
@@ -101,7 +101,7 @@ export const useRegister = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ email, username, password }: { email: string; username: string; password: string }) => 
-      apiFetch('/register', { method: 'POST', body: JSON.stringify({ email, username, password }) }),
+      apiFetch('/register', { method: 'POST', data: JSON.stringify({ email, username, password }) }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['user'] }),
   });
 };
@@ -150,7 +150,7 @@ export const useUpdateMissionObjective = (missionId?: string) => {
     mutationFn: ({ objectiveId, complete }: { objectiveId: string; complete: boolean }) =>
       apiFetch<MissionRuntimeState>(`/missions/${missionId}/runtime/objective`, {
         method: 'POST',
-        body: JSON.stringify({ objectiveId, complete }),
+        data: JSON.stringify({ objectiveId, complete }),
       }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['missionRuntime', missionId] }),
   });
@@ -177,7 +177,7 @@ export const useApplyMissionAction = (missionId?: string) => {
     mutationFn: (action: MissionAction) =>
       apiFetch(`/missions/${missionId}/action`, {
         method: 'POST',
-        body: JSON.stringify({ action }),
+        data: JSON.stringify({ action }),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['mission', missionId] });
@@ -233,7 +233,7 @@ export const useCreateTeam = () => {
     mutationFn: (missionId?: string) =>
       apiFetch<unknown>('/team/create', {
         method: 'POST',
-        body: JSON.stringify({ missionId }),
+        data: JSON.stringify({ missionId }),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['teamSession'] });
@@ -248,7 +248,7 @@ export const useJoinTeam = () => {
     mutationFn: (teamId: string) =>
       apiFetch<unknown>('/team/join', {
         method: 'POST',
-        body: JSON.stringify({ teamId }),
+        data: JSON.stringify({ teamId }),
       }),
     onSuccess: (_data, teamId) => {
       queryClient.invalidateQueries({ queryKey: ['teamSession', teamId] });
@@ -262,7 +262,7 @@ export const useAddTeamEvidence = (teamId: string) => {
     mutationFn: (evidenceType: string = 'clue') =>
       apiFetch(`/team/${teamId}/evidence`, {
         method: 'POST',
-        body: JSON.stringify({ evidenceType }),
+        data: JSON.stringify({ evidenceType }),
       }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['teamSession', teamId] }),
   });
@@ -274,7 +274,7 @@ export const useToggleTeamReady = (teamId: string) => {
     mutationFn: (ready: boolean) =>
       apiFetch(`/team/${teamId}/ready`, {
         method: 'POST',
-        body: JSON.stringify({ ready }),
+        data: JSON.stringify({ ready }),
       }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['teamSession', teamId] }),
   });
@@ -286,7 +286,7 @@ export const useAccuseTeam = (teamId: string) => {
     mutationFn: (accusedId: string) =>
       apiFetch(`/team/${teamId}/accuse`, {
         method: 'POST',
-        body: JSON.stringify({ accusedId }),
+        data: JSON.stringify({ accusedId }),
       }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['teamSession', teamId] }),
   });

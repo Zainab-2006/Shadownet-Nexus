@@ -14,7 +14,7 @@ import { useGame } from '@/context/GameContext';
 import { useAuthentication } from '@/context/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/apiClient';
-import { usePuzzleSession, useSubmitStage, useGetHint } from '@/api/puzzleApi';
+import { PuzzleStageView, usePuzzleSession, useSubmitStage, useGetHint } from '@/api/puzzleApi';
 import { Challenge } from '@/api/challengeApi';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -35,30 +35,9 @@ const difficultyColors: Record<string, string> = {
   insane: 'text-secondary',
 };
 
-type ChallengeStageView = {
-  briefing?: string;
-  objective?: string;
-  evidence?: string;
-  submitFormat?: string;
-  learningContent?: string;
-  answer?: string;
-  solution?: string;
-  finalAnswer?: string;
-};
-
 type SoloAttemptMode = 'ranked' | 'teaching' | 'coaching';
 
-const parseChallengeStages = (stages: unknown): ChallengeStageView[] => {
-  if (Array.isArray(stages)) return stages as ChallengeStageView[];
-  if (typeof stages !== 'string' || !stages.trim()) return [];
-
-  try {
-    const parsed = JSON.parse(stages);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-};
+const normalizePuzzleStages = (stages: PuzzleStageView[] | undefined): PuzzleStageView[] => Array.isArray(stages) ? stages : [];
 
 const ChallengeCard = forwardRef<HTMLDivElement, { challenge: Challenge; onClick: () => void }>(({ challenge, onClick }, ref) => {
   return (
@@ -124,18 +103,6 @@ interface ChallengeModalProps {
   openNarrator: (payload: { event: string; title: string; message: string; dismissible: boolean }) => void;
 }
 
-type PuzzleChallengePayload = {
-  stages?: unknown;
-};
-
-const getPuzzleChallengeStages = (challenge: unknown): unknown => {
-  if (typeof challenge === 'object' && challenge !== null && 'stages' in challenge) {
-    return (challenge as PuzzleChallengePayload).stages;
-  }
-
-  return undefined;
-};
-
 const ChallengeModal = ({
   challenge,
   onClose,
@@ -162,7 +129,7 @@ const ChallengeModal = ({
   const { data: session, isLoading: sessionLoading } = usePuzzleSession(challenge?.id || '');
   const submitStageMut = useSubmitStage();
   const getHintMut = useGetHint();
-  const activeStages = parseChallengeStages(getPuzzleChallengeStages(session?.challenge) ?? challenge?.stages);
+  const activeStages = normalizePuzzleStages(session?.challenge?.stages);
   const stageCount = Math.max(activeStages.length, 1);
   const activeStage = activeStages[currentStage - 1];
   const isCaesarCipher = challenge?.id === 'crypto-001' || challenge?.name?.toLowerCase() === 'caesar cipher';
@@ -172,7 +139,6 @@ const ChallengeModal = ({
   const teachingText = activeStage?.learningContent || (isCaesarCipher
     ? 'Try every Caesar rotation until the ciphertext becomes a readable flag. The answer goes in the submit box exactly as flag{...}.'
     : 'Real-world relevance and prevention guidance will appear here post-solve.');
-  const revealedAnswer = activeStage?.answer || activeStage?.solution || activeStage?.finalAnswer || (isCaesarCipher ? 'flag{caesar}' : '');
 
   const enterTeachingMode = () => {
     setSoloAttemptMode('teaching');
@@ -399,7 +365,7 @@ const ChallengeModal = ({
                             </p>
                             {solutionRevealed && (
                               <p className="mt-2 font-mono text-primary">
-                                Answer: {revealedAnswer || 'No plaintext answer is exposed by this challenge payload. Follow the concept path above and request hints.'}
+                                Answer path: No plaintext answer is exposed by the challenge payload. Follow the concept path above and request hints.
                               </p>
                             )}
                           </div>
@@ -558,7 +524,6 @@ const CTF = () => {
     isSolved: Boolean(serverCh.isSolved || serverCh.solved),
     solved: Boolean(serverCh.isSolved || serverCh.solved),
     attachments: serverCh.attachments || serverCh.files || [],
-    stages: parseChallengeStages(serverCh.stages),
   } as Challenge);
 
   const challengeList = Array.isArray(serverChallenges) ? serverChallenges.map(normalizeChallenge) : [];

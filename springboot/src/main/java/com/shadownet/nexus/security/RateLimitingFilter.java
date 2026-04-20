@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 @Component
 @RequiredArgsConstructor
@@ -50,16 +51,19 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     }
     
     private RateLimitType getRateLimitType(String path) {
-        if (path.equals("/api/login") || path.equals("/api/register") || path.contains("/api/auth/login") || path.contains("/api/auth/register") || path.contains("/api/request-password-reset") || path.contains("/api/reset-password")) {
+        if (path.equals("/api/login") || path.equals("/api/register") || path.equals("/api/auth/login") || path.equals("/api/auth/register") || path.equals("/api/request-password-reset") || path.equals("/api/reset-password")) {
             return RateLimitType.AUTH;
         }
-        if (path.contains("/api/challenges/submit") || path.matches(".*/api/puzzles/.*/submit.*") || path.matches(".*/api/puzzle-sessions/.*/submit.*")) {
+        if (path.equals("/api/submit-flag") || path.equals("/api/puzzle/submit")) {
             return RateLimitType.CHALLENGE_SUBMIT;
         }
-        if (path.contains("/api/challenges") && path.contains("/hint")) {
+        if (path.equals("/api/puzzle/hint")) {
             return RateLimitType.HINT;
         }
-        if (path.contains("/api/team")) {
+        if (path.matches("^/api/challenges/[^/]+/spawn$")) {
+            return RateLimitType.CONTAINER_SPAWN;
+        }
+        if (path.equals("/api/team") || path.startsWith("/api/team/")) {
             return RateLimitType.TEAM_ACTION;
         }
         return null;
@@ -69,7 +73,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         try {
             String[] parts = token.split("\\.");
             if (parts.length == 3) {
-                String payload = new String(java.util.Base64.getDecoder().decode(parts[1]));
+                String payload = new String(java.util.Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8);
                 int idx = payload.indexOf("\"sub\":\"");
                 if (idx > 0) {
                     int start = idx + 7;
@@ -89,7 +93,8 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         AUTH(5, 900),           
         CHALLENGE_SUBMIT(10, 300), 
         HINT(3, 300),           
-        TEAM_ACTION(20, 60);    
+        TEAM_ACTION(20, 60),
+        CONTAINER_SPAWN(5, 300);
     
         public final int maxAttempts;
         public final int windowSeconds;

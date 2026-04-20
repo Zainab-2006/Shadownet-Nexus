@@ -34,7 +34,7 @@ describe.skipIf(!API_BASE)('Story Progress Integration Tests (Fixed)', () => {
     expect(data).toHaveProperty('storyProgress');
   });
 
-  it('should set and get story progress', async () => {
+  it('should reject client-authored story progress mutation', async () => {
     const progressData = {
       completedChapters: [1, 2],
       unlockedChapters: [1, 2, 3],
@@ -50,15 +50,7 @@ describe.skipIf(!API_BASE)('Story Progress Integration Tests (Fixed)', () => {
       credentials: 'include',
       body: JSON.stringify({ storyProgress: JSON.stringify(progressData) }),
     });
-    expect(setResponse.status).toBe(200);
-
-    const getResponse = await fetch(`${API_BASE}/api/users/me/story-progress`, {
-      headers: { 'Authorization': `Bearer ${token}` },
-      credentials: 'include',
-    });
-    expect(getResponse.status).toBe(200);
-    const getData = await getResponse.json();
-    expect(JSON.parse(getData.storyProgress)).toEqual(progressData);
+    expect(setResponse.status).toBe(410);
   });
 
   afterAll(async () => {

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shadownet.nexus.entity.Challenge;
 import com.shadownet.nexus.entity.PuzzleSession;
+import com.shadownet.nexus.mapper.ChallengeViewMapper;
 import com.shadownet.nexus.repository.ChallengeRepository;
 import com.shadownet.nexus.repository.PuzzleSessionRepository;
 import org.slf4j.Logger;
@@ -32,6 +33,9 @@ public class CoachingService {
     @Autowired
     private GameService gameService;
 
+    @Autowired
+    private ChallengeViewMapper challengeViewMapper;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public Map<String, Object> getOrCreateSession(String userId, String challengeId) {
@@ -45,7 +49,7 @@ public class CoachingService {
         response.put("id", session.getId());
         response.put("currentStage", session.getCurrentStage());
         response.put("hintsUsed", session.getHintsUsed());
-        response.put("challenge", challenge);
+        response.put("challenge", challengeViewMapper.toPuzzleDto(challenge));
         response.put("completed", session.isCompleted());
         return response;
     }

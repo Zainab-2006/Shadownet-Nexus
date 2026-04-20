@@ -12,6 +12,8 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TeamSessionViewDTO {
+    private String id;
+    private String teamId;
     private String sessionId;
     private String missionId;
     private String phase;

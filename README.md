@@ -67,7 +67,7 @@ Fresh DB proof was run against disposable native-MySQL schema `shadownet_fresh_v
 - Client-authored trust and mission mutation routes are retired: `/api/trust/update` and `/api/missions/{id}/progress` return `410`.
 - Team evidence and accusation consequences now route through backend consequence services; team create/join/ready/start state, explicit leader authority, mission association, readable member DTOs, activity log, and per-team update broadcasts are persisted.
 - `/api/puzzle/*` is the canonical solo CTF session route family.
-- `/api/puzzle-session/*` is deprecated compatibility only.
+- Legacy `/api/puzzle-session/*` routes have been removed; use `/api/puzzle/*`.
 - Team and mission systems are backend-backed and tested at service level. Team backend lifecycle also has a live two-user REST smoke proof. Browser-level multi-user WebSocket/Cypress validation remains the remaining proof gap.
 
 ## Maintained Documentation

@@ -2,6 +2,7 @@ package com.shadownet.nexus.controller;
 
 import com.shadownet.nexus.entity.Challenge;
 import com.shadownet.nexus.entity.UserSkill;
+import com.shadownet.nexus.mapper.ChallengeViewMapper;
 import com.shadownet.nexus.repository.ChallengeRepository;
 import com.shadownet.nexus.repository.UserSkillRepository;
 import com.shadownet.nexus.service.AdaptiveEngineService;
@@ -29,6 +30,9 @@ public class RecommendedController {
     @Autowired
     private AdaptiveEngineService adaptiveService;
 
+    @Autowired
+    private ChallengeViewMapper challengeViewMapper;
+
     @GetMapping("/challenges/recommended")
     public ResponseEntity<?> getRecommendedChallenges(Authentication auth,
             @RequestParam(required = false) String userId) {
@@ -47,6 +51,8 @@ public class RecommendedController {
                 .limit(6)
                 .collect(Collectors.toList());
 
-        return ResponseEntity.ok(recommended);
+        return ResponseEntity.ok(recommended.stream()
+                .map(challengeViewMapper::toListDto)
+                .toList());
     }
 }
