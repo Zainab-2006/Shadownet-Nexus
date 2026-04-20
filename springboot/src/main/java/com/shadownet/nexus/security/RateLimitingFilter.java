@@ -60,6 +60,12 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         if (path.equals("/api/pcg/solo/generate")) {
             return RateLimitType.PCG_GENERATE;
         }
+        if (path.equals("/api/mission-runtime/start") || path.equals("/api/story-runtime/start")) {
+            return RateLimitType.RUNTIME_START;
+        }
+        if (path.equals("/api/mission-runtime/decision") || path.equals("/api/mission-runtime/evidence") || path.equals("/api/story-runtime/choice")) {
+            return RateLimitType.RUNTIME_ACTION;
+        }
         if (path.equals("/api/puzzle/hint")) {
             return RateLimitType.HINT;
         }
@@ -98,7 +104,9 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         HINT(3, 300),           
         TEAM_ACTION(20, 60),
         CONTAINER_SPAWN(5, 300),
-        PCG_GENERATE(10, 300);
+        PCG_GENERATE(10, 300),
+        RUNTIME_START(10, 300),
+        RUNTIME_ACTION(30, 60);
     
         public final int maxAttempts;
         public final int windowSeconds;
