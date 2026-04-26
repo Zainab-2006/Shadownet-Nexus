@@ -99,18 +99,13 @@ Fresh DB proof was run against disposable native-MySQL schema `shadownet_fresh_v
 - Legacy `/api/puzzle-session/*` routes have been removed; use `/api/puzzle/*`.
 - Team and mission systems are backend-backed and tested at service level. Team backend lifecycle also has a live two-user REST smoke proof. Browser-level multi-user WebSocket/Cypress validation remains the remaining proof gap.
 
-## Maintained Documentation
+## Repository Scope
 
-The maintained project docs are:
+This repository is intentionally kept focused on:
 
-- `API_CONTRACT.md`
-- `DEPLOYMENT_TESTING.md`
-- `DEPLOYMENT_CHECKLIST.md`
-- `SECURITY_INDEX.md`
-- `SECURITY_DEVELOPER_GUIDE.md`
-- `SECURITY_IMPLEMENTATION.md`
-- `GAMEPLAY_STATE_MODEL.md`
-- `OPERATOR_SYSTEM.md`
-- `STORY_CONSEQUENCES.md`
+- application source (`src/`, `springboot/`, `public/`)
+- Render deployment (`render.yaml`)
+- local development (`docker-compose.yml`, Dockerfiles, build config)
+- automated tests (`src/test/`, `cypress/`, `.github/workflows/ci.yml`)
 
-Historical planning/setup notes are archived in `archive/obsolete-docs-2026-04-17/`.
+Additional planning, audit, and archive documents were removed to keep the public repo lean.
