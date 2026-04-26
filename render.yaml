@@ -1,0 +1,67 @@
+services:
+  - name: shadownet-frontend
+    type: web
+    runtime: static
+    plan: free
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://shadownet-backend.onrender.com/api
+      - key: VITE_WS_URL
+        value: https://shadownet-backend.onrender.com
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+  - name: shadownet-backend
+    type: web
+    runtime: docker
+    plan: free
+    dockerfilePath: ./springboot/Dockerfile
+    dockerContext: ./springboot
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: DATABASE_URL
+        value: jdbc:mysql://shadownet-mysql:3306/shadownet?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
+      - key: DB_USERNAME
+        value: shadownet
+      - key: DB_PASSWORD
+        sync: false
+      - key: DATABASE_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRATION
+        value: "86400000"
+      - key: CORS_ORIGINS
+        value: https://shadownet-frontend.onrender.com
+      - key: SECURE_COOKIES
+        value: "true"
+      - key: SWAGGER_ENABLED
+        value: "false"
+      - key: API_DOCS_ENABLED
+        value: "false"
+
+  - name: shadownet-mysql
+    type: pserv
+    runtime: image
+    plan: starter
+    image:
+      url: docker.io/mysql:8.0
+    disk:
+      name: mysql-data
+      mountPath: /var/lib/mysql
+      sizeGB: 10
+    envVars:
+      - key: MYSQL_DATABASE
+        value: shadownet
+      - key: MYSQL_USER
+        value: shadownet
+      - key: MYSQL_PASSWORD
+        sync: false
+      - key: MYSQL_ROOT_PASSWORD
+        sync: false

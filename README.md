@@ -26,6 +26,35 @@ Invoke-WebRequest http://localhost:3001/actuator/health
 Invoke-WebRequest http://localhost:3001/api/challenges
 ```
 
+## Deploy On Render
+
+This repo now includes [render.yaml](/C:/Users/zain/Downloads/shadownet-nexus/render.yaml:1) for a three-service Render deployment:
+
+- Static frontend: `shadownet-frontend`
+- Spring Boot backend: `shadownet-backend`
+- Private MySQL: `shadownet-mysql`
+
+Important setup notes:
+
+- Render should create the frontend and backend from this repo automatically via Blueprint sync.
+- The MySQL service uses a persistent disk and must not be deployed on the free plan. The Blueprint sets it to `starter`.
+- Do not commit secrets. Set `DB_PASSWORD`, `DATABASE_PASSWORD`, `MYSQL_PASSWORD`, and `MYSQL_ROOT_PASSWORD` in Render only.
+- After Render creates the frontend URL, update the backend `CORS_ORIGINS` value if you rename the frontend service or attach a custom domain.
+
+Recommended Render flow:
+
+1. Push this repo to GitHub.
+2. In Render, choose `New +` -> `Blueprint`.
+3. Select this repository and confirm `render.yaml`.
+4. Before the first deploy completes, set the secret values for the MySQL and backend password variables in the Render dashboard.
+5. After deploy, open the backend health endpoint and frontend site.
+
+Minimal post-deploy checks:
+
+- Backend: `https://<your-backend>/actuator/health`
+- Backend API: `https://<your-backend>/api/challenges`
+- Frontend loads and can reach the backend without CORS errors.
+
 ## Run Backend
 
 ```powershell
