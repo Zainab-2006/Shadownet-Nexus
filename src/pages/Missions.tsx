@@ -30,7 +30,7 @@ const difficultyConfig: Record<string, { color: string; stars: number }> = {
 
 const formatTime = (seconds: number) => `${Math.floor(seconds / 60)} min`;
 
-const MissionCard = forwardRef<HTMLDivElement, { mission: Mission; onClick: () => void }>(({ mission, onClick }, ref) => {
+const MissionCard = forwardRef<HTMLDivElement, { mission: Mission; index: number; onClick: () => void }>(({ mission, index, onClick }, ref) => {
   const diff = difficultyConfig[mission.difficulty] || difficultyConfig.medium;
   const typeClass = typeColors[mission.type] || 'text-cyan-200 bg-cyan-500/10 border-cyan-400/20';
 
@@ -42,6 +42,7 @@ const MissionCard = forwardRef<HTMLDivElement, { mission: Mission; onClick: () =
             <span className={`text-xs font-mono uppercase px-2 py-1 rounded border ${typeClass}`}>{String(mission.type).replace('_', ' ')}</span>
             <div className={`flex items-center gap-1 ${diff.color}`}>{Array.from({ length: diff.stars }).map((_, i) => <Star key={i} className="w-3 h-3 fill-current" />)}</div>
           </div>
+          <p className="text-xs font-mono text-primary uppercase mb-1">Episode {index + 1}</p>
           <h3 className="font-heading text-lg font-bold mb-2 flex items-center gap-2">{mission.name}{mission.completed && <CheckCircle2 className="w-4 h-4 text-success" />}</h3>
           <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{mission.description}</p>
           <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -168,7 +169,7 @@ const Missions = () => {
 
             <div className="flex gap-2 flex-wrap mb-8">{types.map((type) => <CyberButton key={type} variant={filter === type ? 'primary' : 'ghost'} size="sm" onClick={() => setFilter(type)}>{type === 'all' ? 'All Types' : String(type).replace('_', ' ')}</CyberButton>)}</div>
           </motion.div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"><AnimatePresence mode="popLayout">{filteredMissions.map((mission) => <MissionCard key={mission.id} mission={mission} onClick={() => setSelectedMission(mission)} />)}</AnimatePresence></div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"><AnimatePresence mode="popLayout">{filteredMissions.map((mission, index) => <MissionCard key={mission.id} mission={mission} index={index} onClick={() => setSelectedMission(mission)} />)}</AnimatePresence></div>
           {filteredMissions.length === 0 && !isLoading && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20"><Target className="w-12 h-12 text-muted-foreground mx-auto mb-4" /><p className="text-muted-foreground">No missions available for this category.</p></motion.div>}
           {isLoading && <div className="text-center py-20"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div><p>Loading missions...</p></div>}
         </div>

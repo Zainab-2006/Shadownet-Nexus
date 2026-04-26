@@ -104,7 +104,7 @@ const MissionRuntime = () => {
               Back to Missions
             </CyberButton>
             <div className="flex items-center gap-6 mb-4">
-              <h1 className="font-heading text-4xl font-bold">Operation Runtime: {(mission?.name || missionId).replace('_', ' ').toUpperCase()}</h1>
+              <h1 className="font-heading text-4xl font-bold">Mission Episode Runtime: {(mission?.name || missionId).replace('_', ' ').toUpperCase()}</h1>
               <div className={`px-4 py-2 rounded-full text-sm font-mono ${
                 runtimeStatus === 'active' ? 'bg-success/20 text-success border-success/30' :
                 'bg-destructive/20 text-destructive'
@@ -135,7 +135,7 @@ const MissionRuntime = () => {
                 <div className="p-6 border-b border-border">
                   <h2 className="font-heading text-xl mb-2 flex items-center gap-2">
                     <Target className="w-5 h-5" />
-                    Operation Phases
+                    Episode Objectives
                   </h2>
                 </div>
                 <div className="p-6 space-y-3">
@@ -168,7 +168,7 @@ const MissionRuntime = () => {
               <CyberCardContent className="p-6 space-y-4">
                 <h3 className="font-heading text-lg mb-4 flex items-center gap-2">
                   <Users className="w-4 h-4" />
-                  Mission Runtime
+                  Episode Runtime
                 </h3>
                 
 
@@ -184,7 +184,7 @@ const MissionRuntime = () => {
                     disabled={completeMission.isPending}
                   >
                     <CheckCircle2 className="w-4 h-4 mr-2" />
-                    Resolve Operation
+                    Resolve Episode
                   </CyberButton>
                 )}
               </CyberCardContent>
