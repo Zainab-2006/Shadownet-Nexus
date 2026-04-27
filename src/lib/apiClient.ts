@@ -1,7 +1,9 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'https://shadownet-nexus-mecf.onrender.com';
+  import.meta.env.VITE_API_BASE_URL
+    ? `${import.meta.env.VITE_API_BASE_URL}/api`
+    : 'https://shadownet-nexus-mecf.onrender.com/api';
 
 const normalizeApiPath = (url: string): string => {
   if (url.startsWith('/api/')) {
