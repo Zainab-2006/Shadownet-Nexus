@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || 'https://shadownet-nexus-mecf.onrender.com';
 
 const normalizeApiPath = (url: string): string => {
   if (url.startsWith('/api/')) {
@@ -39,6 +40,7 @@ class ApiClient {
   constructor() {
     this.client = axios.create({
       baseURL: API_BASE_URL,
+      withCredentials: true,
       headers: {
         'Content-Type': 'application/json',
       },
