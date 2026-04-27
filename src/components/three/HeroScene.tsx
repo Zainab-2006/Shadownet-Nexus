@@ -173,7 +173,6 @@ const HeroScene = ({ className = '' }: HeroSceneProps) => {
             setIsLowPerf(true);
           }
         }
-        gl.getExtension('WEBGL_lose_context')?.loseContext();
       }
       canvas.remove();
     };
