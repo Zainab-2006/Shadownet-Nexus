@@ -8,9 +8,11 @@ const normalizeApiOrigin = (value?: string): string => {
   return value.replace(/\/+$/, '').replace(/\/api$/, '');
 };
 
-const APP_BASE_URL = normalizeApiOrigin(import.meta.env.VITE_API_BASE_URL);
+const APP_BASE_URL = import.meta.env.DEV && !import.meta.env.VITE_API_BASE_URL
+  ? ''
+  : normalizeApiOrigin(import.meta.env.VITE_API_BASE_URL);
 
-export const API_BASE = `${APP_BASE_URL}/api`;
+export const API_BASE = APP_BASE_URL ? `${APP_BASE_URL}/api` : '/api';
 export const WS_BASE = import.meta.env.VITE_WS_URL || APP_BASE_URL;
 
 export const ENV = {

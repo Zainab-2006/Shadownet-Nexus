@@ -10,7 +10,9 @@ const normalizeApiOrigin = (value?: string): string => {
   return value.replace(/\/+$/, '').replace(/\/api$/, '');
 };
 
-const API_BASE_URL = `${normalizeApiOrigin(import.meta.env.VITE_API_BASE_URL)}/api`;
+const API_BASE_URL = import.meta.env.DEV && !import.meta.env.VITE_API_BASE_URL
+  ? '/api'
+  : `${normalizeApiOrigin(import.meta.env.VITE_API_BASE_URL)}/api`;
 
 const normalizeApiPath = (url: string): string => {
   if (url.startsWith('/api/')) {

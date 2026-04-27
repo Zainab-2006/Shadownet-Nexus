@@ -6,8 +6,8 @@ services:
     buildCommand: npm ci && npm run build
     staticPublishPath: ./dist
     envVars:
-      - key: VITE_API_URL
-        value: https://shadownet-backend.onrender.com/api
+      - key: VITE_API_BASE_URL
+        value: https://shadownet-backend.onrender.com
       - key: VITE_WS_URL
         value: https://shadownet-backend.onrender.com
     routes:
@@ -38,7 +38,7 @@ services:
       - key: JWT_EXPIRATION
         value: "86400000"
       - key: CORS_ORIGINS
-        value: https://shadownet-frontend.onrender.com
+        value: http://localhost:5173,http://localhost:3000,http://localhost:8080,http://localhost:8081,https://shadownet-frontend.onrender.com,https://shadownet-nexus.vercel.app,https://*.vercel.app
       - key: SECURE_COOKIES
         value: "true"
       - key: SWAGGER_ENABLED

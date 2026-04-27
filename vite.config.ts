@@ -31,6 +31,11 @@ export default defineConfig(({ mode }) => ({
             console.log('Proxy Response', req.method, req.url, proxyRes.statusCode);
           });
         }
+      },
+      '/ws': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        ws: true,
       }
     },
     hmr: {

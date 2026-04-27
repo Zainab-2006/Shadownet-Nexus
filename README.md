@@ -70,6 +70,22 @@ The helper checks MySQL on `3305`, falls back to native MySQL on `3306`, and use
 npm.cmd run dev
 ```
 
+Local Vite development intentionally proxies `/api` and `/ws` to `http://localhost:3001`.
+Do not set `VITE_API_BASE_URL` or `VITE_WS_URL` locally unless you explicitly want to bypass the proxy and call a remote backend directly.
+
+## Vercel Frontend
+
+Configure the Vercel project with:
+
+- Root Directory: `.`
+- Framework Preset: `Vite`
+- Build Command: `npm run build`
+- Output Directory: `dist`
+- Environment variable `VITE_API_BASE_URL=https://shadownet-nexus-mecf.onrender.com`
+- Environment variable `VITE_WS_URL=https://shadownet-nexus-mecf.onrender.com`
+
+This repo includes `vercel.json` to rewrite all SPA routes to `index.html`, so direct visits to routes like `/login` and `/operators` should resolve correctly after a fresh deploy.
+
 ## Verification
 
 ```powershell
