@@ -1,5 +1,14 @@
-const APP_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'https://shadownet-nexus-mecf.onrender.com';
+const DEFAULT_API_ORIGIN = 'https://shadownet-nexus-mecf.onrender.com';
+
+const normalizeApiOrigin = (value?: string): string => {
+  if (!value) {
+    return DEFAULT_API_ORIGIN;
+  }
+
+  return value.replace(/\/+$/, '').replace(/\/api$/, '');
+};
+
+const APP_BASE_URL = normalizeApiOrigin(import.meta.env.VITE_API_BASE_URL);
 
 export const API_BASE = `${APP_BASE_URL}/api`;
 export const WS_BASE = import.meta.env.VITE_WS_URL || APP_BASE_URL;

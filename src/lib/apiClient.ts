@@ -1,9 +1,16 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL
-    ? `${import.meta.env.VITE_API_BASE_URL}/api`
-    : 'https://shadownet-nexus-mecf.onrender.com/api';
+const DEFAULT_API_ORIGIN = 'https://shadownet-nexus-mecf.onrender.com';
+
+const normalizeApiOrigin = (value?: string): string => {
+  if (!value) {
+    return DEFAULT_API_ORIGIN;
+  }
+
+  return value.replace(/\/+$/, '').replace(/\/api$/, '');
+};
+
+const API_BASE_URL = `${normalizeApiOrigin(import.meta.env.VITE_API_BASE_URL)}/api`;
 
 const normalizeApiPath = (url: string): string => {
   if (url.startsWith('/api/')) {
