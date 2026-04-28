@@ -1,0 +1,28 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#040816"/>
+      <stop offset="0.55" stop-color="#0A1633"/>
+      <stop offset="1" stop-color="#13081E"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="154" y1="176" x2="1044" y2="454" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#22D3EE"/>
+      <stop offset="1" stop-color="#F43F5E"/>
+    </linearGradient>
+    <filter id="glow" x="0" y="0" width="1200" height="630" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="28"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <g opacity="0.18" filter="url(#glow)">
+    <circle cx="246" cy="124" r="110" fill="#22D3EE"/>
+    <circle cx="1012" cy="498" r="120" fill="#F43F5E"/>
+  </g>
+  <rect x="74" y="78" width="1052" height="474" rx="28" stroke="url(#accent)" stroke-width="2" stroke-opacity="0.42"/>
+  <path d="M118 470H1082" stroke="url(#accent)" stroke-opacity="0.28"/>
+  <path d="M118 208H1082" stroke="url(#accent)" stroke-opacity="0.2"/>
+  <text x="116" y="162" fill="#93C5FD" font-family="Arial, Helvetica, sans-serif" font-size="28" letter-spacing="8">NEXUS PROGRAM</text>
+  <text x="116" y="314" fill="white" font-family="Arial, Helvetica, sans-serif" font-size="88" font-weight="700">SHADOWNET</text>
+  <text x="116" y="408" fill="url(#accent)" font-family="Arial, Helvetica, sans-serif" font-size="88" font-weight="700">NEXUS</text>
+  <text x="118" y="486" fill="#CBD5E1" font-family="Arial, Helvetica, sans-serif" font-size="30">Gamified CTF platform with operators, missions, story routes, and cyber warfare simulation.</text>
+</svg>
