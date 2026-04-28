@@ -33,6 +33,7 @@ export interface StoryProgress {
   currentChapterId: number | null;
   currentSceneId: number | null;
   completedChapters: number[];
+  choicesMade?: Record<string, number>;
   completionPercentage: number;
 }
 
@@ -135,7 +136,6 @@ export const useMakeDecisionMutation = () => {
     },
   });
 };
-
 
 
 

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronLeft, CheckCircle2, Shield } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { CyberButton } from '@/components/ui/cyber-button';
@@ -9,10 +9,11 @@ import Navbar from '@/components/layout/Navbar';
 import ParticleBackground from '@/components/layout/ParticleBackground';
 import PageTransition from '@/components/layout/PageTransition';
 import { useGame } from '@/context/GameContext';
-import { useGetSceneQuery, useMakeDecisionMutation } from '@/api/storyApi';
+import { useCharacters } from '@/api/operatorApi';
+import { storyApi, useGetProgressQuery, useGetSceneQuery, useMakeDecisionMutation } from '@/api/storyApi';
 import { toast } from 'sonner';
 
-interface Scene {
+interface SceneView {
   id: number;
   chapterId: number;
   sceneNumber: number;
@@ -21,7 +22,7 @@ interface Scene {
   characterSpeaking?: string;
   operatorPovVariants?: Record<string, string>;
   choices?: Array<{
-    id: string | number;  // Fix TS: API returns string, local expects number
+    id: string | number;
     text: string;
     trustImpact: number;
     evidenceCode?: string;
@@ -33,7 +34,7 @@ interface Scene {
 interface DecisionResponseSummary {
   nextSceneId: number | null;
   trustDelta: number;
-  evidenceGained: Array<{ evidenceCode: string; title: string; }>;
+  evidenceGained: Array<{ evidenceCode: string; title: string }>;
   unlockedMissions: string[];
   consequenceSummary?: string;
 }
@@ -44,34 +45,61 @@ const StoryScene = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { selectedOperator } = useGame();
-  const { data: scene, isLoading } = useGetSceneQuery(sceneNum);
+  const charactersQuery = useCharacters();
+  const progressQuery = useGetProgressQuery();
+  const sceneQuery = useGetSceneQuery(sceneNum);
   const makeDecisionMutation = useMakeDecisionMutation();
   const submittingRef = React.useRef(false);
 
-  const [localChoices, setLocalChoices] = useState<Scene['choices']>([]);
+  const characters = charactersQuery?.data || [];
+  const storyProgress = progressQuery?.data;
+  const scene = sceneQuery?.data;
+  const isLoading = sceneQuery?.isLoading ?? false;
+
+  const [localChoices, setLocalChoices] = useState<SceneView['choices']>([]);
   const [recentDecision, setRecentDecision] = useState<DecisionResponseSummary | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const routeOperator = characters.find((character) => character.id === operatorId) || null;
+  const activeOperator = selectedOperator?.id === operatorId ? selectedOperator : routeOperator;
 
   useEffect(() => {
     if (scene?.choices) {
       setLocalChoices(scene.choices);
+    } else {
+      setLocalChoices([]);
     }
     setRecentDecision(null);
     submittingRef.current = false;
     setIsSubmitting(false);
-  }, [scene?.id, scene?.choices]);
+  }, [scene?.choices, scene?.id]);
 
-  const handleChoice = React.useCallback(async (choiceId: number | string) => {
+  useEffect(() => {
+    if (!selectedOperator?.id || !operatorId) return;
+    if (selectedOperator.id !== operatorId) {
+      navigate(`/story/operator/${selectedOperator.id}`, { replace: true });
+    }
+  }, [navigate, operatorId, selectedOperator?.id]);
+
+  useEffect(() => {
+    if (!storyProgress?.currentSceneId || !operatorId) return;
+    if (sceneNum !== storyProgress.currentSceneId) {
+      navigate(`/story/operator/${operatorId}/scene/${storyProgress.currentSceneId}`, { replace: true });
+    }
+  }, [navigate, operatorId, sceneNum, storyProgress?.currentSceneId]);
+
+  const handleChoice = React.useCallback((choiceId: number | string) => {
     const choiceIdNum = typeof choiceId === 'string' ? Number(choiceId) : choiceId;
-    if (!scene?.id || submittingRef.current || makeDecisionMutation.isPending) return;
+    if (!scene?.id || !operatorId || submittingRef.current || makeDecisionMutation.isPending) return;
+
     submittingRef.current = true;
     setIsSubmitting(true);
 
     makeDecisionMutation.mutate(
-      { 
-        sceneId: scene.id, 
+      {
+        sceneId: scene.id,
         choiceId: choiceIdNum,
-        operatorId: operatorId || selectedOperator?.id // Explicit operatorId POV
+        operatorId,
       },
       {
         onSuccess: (response) => {
@@ -85,27 +113,48 @@ const StoryScene = () => {
           setRecentDecision(summary);
 
           toast.success(
-            `Decision logged. Trust ${response.trustDelta > 0 ? '+' : ''}${response.trustDelta}. Evidence: ${summary.evidenceGained.length}.`
+            `Decision logged. Trust ${response.trustDelta > 0 ? '+' : ''}${response.trustDelta}. Evidence: ${summary.evidenceGained.length}.`,
           );
 
           if (response.nextSceneId) {
             navigate(`/story/operator/${operatorId}/scene/${response.nextSceneId}`);
-          } else if (response.unlockedMissionIds?.length) {
+            return;
+          }
+
+          if (response.unlockedMissionIds?.length) {
             toast.info(`Mission unlocked: ${response.unlockedMissionIds[0]}`);
             navigate('/missions');
-          } else {
-            navigate(`/story/operator/${operatorId}`);
+            return;
           }
+
+          navigate(`/story/operator/${operatorId}`);
         },
         onError: (error) => {
           const response = (error as { response?: { status?: number; data?: { message?: string } } }).response;
+
           if (response?.status === 409) {
-            toast.info(response.data?.message || 'Story state changed. Reloading current progress.');
-            queryClient.invalidateQueries({ queryKey: ['storyProgress'] });
-            queryClient.invalidateQueries({ queryKey: ['storyScene'] });
+            void (async () => {
+              try {
+                const progress = await storyApi.getProgress();
+                queryClient.setQueryData(['storyProgress'], progress);
+                await queryClient.invalidateQueries({ queryKey: ['storyScene'] });
+
+                if (progress.currentSceneId) {
+                  navigate(`/story/operator/${operatorId}/scene/${progress.currentSceneId}`, { replace: true });
+                } else {
+                  navigate(`/story/operator/${operatorId}`, { replace: true });
+                }
+
+                toast.info(response.data?.message || 'Story state changed. Synced to current progress.');
+              } catch {
+                toast.info(response.data?.message || 'Story state changed. Reload the operator dossier.');
+                navigate(`/story/operator/${operatorId}`, { replace: true });
+              }
+            })();
           } else {
             toast.error(`Decision failed: ${error}`);
           }
+
           submittingRef.current = false;
           setIsSubmitting(false);
         },
@@ -113,17 +162,16 @@ const StoryScene = () => {
           submittingRef.current = false;
           setIsSubmitting(false);
         },
-      }
+      },
     );
-  }, [scene?.id, makeDecisionMutation, operatorId, selectedOperator?.id, navigate, queryClient]);
+  }, [makeDecisionMutation, navigate, operatorId, queryClient, scene?.id]);
 
-  // Safe POV variant (no render side-effects)
-  const povVariant = React.useMemo(() => {
-    if (!selectedOperator || !scene?.operatorPovVariants) return '';
-    return scene.operatorPovVariants[selectedOperator.id] || '';
-  }, [scene?.operatorPovVariants, selectedOperator]);
+  const povVariant = useMemo(() => {
+    if (!activeOperator || !scene?.operatorPovVariants) return '';
+    return scene.operatorPovVariants[activeOperator.id] || '';
+  }, [activeOperator, scene?.operatorPovVariants]);
 
-  if (isLoading || !selectedOperator || selectedOperator.id !== operatorId) {
+  if (isLoading || !activeOperator) {
     return (
       <PageTransition>
         <Navbar />
@@ -171,7 +219,7 @@ const StoryScene = () => {
             <CyberCardContent className="p-8">
               <div className="flex items-center gap-4 mb-6">
                 <div className="text-2xl font-heading">
-                  Chapter {scene.chapterId} • Scene {scene.sceneNumber}
+                  Chapter {scene.chapterId} - Scene {scene.sceneNumber}
                 </div>
                 {scene.characterSpeaking && (
                   <div className="px-4 py-2 bg-secondary/20 rounded-full text-sm font-mono">
@@ -181,7 +229,7 @@ const StoryScene = () => {
               </div>
               {povVariant && (
                 <div className="italic text-primary mb-4 text-sm">
-                  *{selectedOperator.codename}: {povVariant}*
+                  *{activeOperator.codename}: {povVariant}*
                 </div>
               )}
             </CyberCardContent>
@@ -212,7 +260,7 @@ const StoryScene = () => {
                 <div className="space-y-2 text-sm">
                   <p>Trust {recentDecision.trustDelta > 0 ? '+' : ''}{recentDecision.trustDelta}</p>
                   {recentDecision.evidenceGained.length > 0 && (
-                    <p>Evidence: {recentDecision.evidenceGained.map(e => e.title).join(', ')}</p>
+                    <p>Evidence: {recentDecision.evidenceGained.map((e) => e.title).join(', ')}</p>
                   )}
                   {recentDecision.unlockedMissions.length > 0 && (
                     <p>Missions: {recentDecision.unlockedMissions.join(', ')}</p>
@@ -236,15 +284,23 @@ const StoryScene = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
                   >
-                    <CyberCard variant={isSubmitting || makeDecisionMutation.isPending ? 'default' : 'interactive'} className={isSubmitting || makeDecisionMutation.isPending ? 'opacity-50 pointer-events-none' : ''}>
+                    <CyberCard
+                      variant={isSubmitting || makeDecisionMutation.isPending ? 'default' : 'interactive'}
+                      className={isSubmitting || makeDecisionMutation.isPending ? 'opacity-50 pointer-events-none' : ''}
+                    >
                       <CyberCardContent className="p-6 cursor-pointer" onClick={() => handleChoice(Number(choice.id))}>
                         <div className="flex items-start justify-between mb-3">
-                          <span className={`px-3 py-1 rounded-full text-xs font-mono ${
-                            choice.trustImpact >= 5 ? 'bg-success/20 text-success border-success/30' :
-                            choice.trustImpact <= -5 ? 'bg-destructive/20 text-destructive border-destructive/30' :
-                            'bg-secondary/20 text-secondary border-secondary/30'
-                          }`}>
-                            {choice.trustImpact >= 0 ? '+' : ''}{choice.trustImpact} Trust
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-mono ${
+                              choice.trustImpact >= 5
+                                ? 'bg-success/20 text-success border-success/30'
+                                : choice.trustImpact <= -5
+                                  ? 'bg-destructive/20 text-destructive border-destructive/30'
+                                  : 'bg-secondary/20 text-secondary border-secondary/30'
+                            }`}
+                          >
+                            {choice.trustImpact >= 0 ? '+' : ''}
+                            {choice.trustImpact} Trust
                           </span>
                           {choice.evidenceCode && (
                             <Shield className="w-4 h-4 text-primary" />
