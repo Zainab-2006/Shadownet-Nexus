@@ -18,6 +18,7 @@ import type { StoryProgress } from '@/api/storyApi';
 import type { Operator } from '@/types/operator';
 import type { UserProgression, User } from '@/api/userApi';
 import { useSelectOperator } from '@/api/operatorApi';
+import { roster } from '@/data/roster';
 
 interface ContextState {
   user: User | null;
@@ -94,6 +95,22 @@ const DEFAULT_STATS = {
   tech: 60,
 } as const;
 
+const LEGACY_OPERATOR_ALIASES: Record<string, string> = {
+  op_analyst: 'op_elara-voss',
+  op_field: 'op_marcus-webb',
+  op_hacker: 'op_ciphershade',
+};
+
+const canonicalOperatorId = (id?: string | null) => LEGACY_OPERATOR_ALIASES[id ?? ''] || id || '';
+
+const rosterPresentationByBackendId = new Map(
+  roster.map((character) => [character.backendOperatorId || `op_${character.id}`, character])
+);
+
+const rosterPresentationByName = new Map(
+  roster.map((character) => [character.name.toLowerCase(), character])
+);
+
 const buildProgression = (user: User | null): UserProgression | null => {
   if (!user) return null;
   return {
@@ -110,8 +127,13 @@ const buildProgression = (user: User | null): UserProgression | null => {
 };
 
 const normalizeOperator = (raw: unknown): Operator => {
+  const canonicalId = canonicalOperatorId(String(raw?.id ?? ''));
   const name = String(raw?.name ?? 'Unknown Operator').trim();
   const role = String(raw?.role ?? 'Operative').trim();
+  const presentation =
+    rosterPresentationByBackendId.get(canonicalId) ||
+    rosterPresentationByName.get(name.toLowerCase()) ||
+    null;
   const abilitySource = typeof raw?.abilities === 'string' ? raw.abilities : '[]';
   let skills: string[] = [];
 
@@ -127,13 +149,13 @@ const normalizeOperator = (raw: unknown): Operator => {
   }
 
   return {
-    id: String(raw?.id ?? ''),
+    id: canonicalId,
     name,
-    codename: name,
-    role,
-    faction: 'Shadow Network',
+    codename: presentation?.codename || name,
+    role: presentation?.role || role,
+    faction: presentation?.faction === 'villain' ? 'Villains' : 'Heroes',
     tier: 'operative',
-    alignment: 'hero',
+    alignment: presentation?.faction || 'hero',
     specialty: skills[0] || role,
     specialization: skills[0] || role,
     personality: 'Focused and adaptive under pressure.',
@@ -144,9 +166,9 @@ const normalizeOperator = (raw: unknown): Operator => {
     selected: Boolean(raw?.selected),
     portraitUrl: raw?.portraitUrl,
     fullImageUrl: raw?.fullImageUrl,
-    bio: String(raw?.backstory ?? 'No briefing available yet.'),
-    storyline: String(raw?.backstory ?? 'No briefing available yet.'),
-    skills,
+    bio: presentation?.background || String(raw?.backstory ?? 'No briefing available yet.'),
+    storyline: presentation?.background || String(raw?.backstory ?? 'No briefing available yet.'),
+    skills: skills.length > 0 ? skills : presentation?.skills.map((skill) => skill.name) ?? [],
     stats: { ...DEFAULT_STATS },
     trust: 50,
   };
@@ -307,7 +329,7 @@ const loadUserData = useCallback(async () => {
       const user = await apiFetch<User>('/users/me');
       const progressionResponse = await apiFetch<UserProgression>('/users/me/progress');
       const progression = progressionResponse ?? buildProgression(user);
-      const selectedOperatorId = user.selectedOperator ?? null;
+      const selectedOperatorId = canonicalOperatorId(user.selectedOperator ?? null);
 
       const operators = await queryClient.fetchQuery({ queryKey: ['operators'], queryFn: fetchOperators });
       const selectedOperator = operators.find((operator) => String(operator.id) === selectedOperatorId) ?? null;
@@ -416,7 +438,7 @@ const loadUserData = useCallback(async () => {
           storyProgress,
           missionStates,
           leaderboard,
-          selectedOperatorId: user.selectedOperator ?? gameState.selectedOperator,
+          selectedOperatorId: canonicalOperatorId(user.selectedOperator ?? gameState.selectedOperator),
           onlineUsers: gameState.onlineUsers,
         }),
       });

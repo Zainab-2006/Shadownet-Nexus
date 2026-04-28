@@ -69,6 +69,14 @@ const DEFAULT_STATS = {
   tech: 60,
 } as const;
 
+const LEGACY_OPERATOR_ALIASES: Record<string, string> = {
+  op_analyst: 'op_elara-voss',
+  op_field: 'op_marcus-webb',
+  op_hacker: 'op_ciphershade',
+};
+
+const canonicalOperatorId = (id?: string) => LEGACY_OPERATOR_ALIASES[id ?? ''] || id || '';
+
 const rosterPresentationByBackendId = new Map(
   roster.map((character) => [character.backendOperatorId || 'op_' + character.id, character])
 );
@@ -106,6 +114,7 @@ const inferAlignment = (role: string): 'hero' | 'villain' => {
 };
 
 const resolvePresentation = (dto: BackendOperatorDto) =>
+  rosterPresentationByBackendId.get(canonicalOperatorId(dto.id)) ||
   rosterPresentationByBackendId.get(dto.id) ||
   rosterPresentationByName.get((dto.name || '').toLowerCase()) ||
   null;
@@ -138,9 +147,10 @@ const toOperator = (dto: BackendOperatorDto): Operator => {
   const bio = presentation?.background || dto.backstory?.trim() || 'No briefing available yet.';
   const imageUrl = resolveImageUrl(dto);
   const alignment = presentation?.faction || inferAlignment(role);
+  const id = canonicalOperatorId(dto.id);
 
   return {
-    id: dto.id,
+    id,
     name,
     codename,
     role,
