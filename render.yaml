@@ -21,7 +21,7 @@ services:
     plan: free
     dockerfilePath: ./springboot/Dockerfile
     dockerContext: ./springboot
-    healthCheckPath: /actuator/health
+    healthCheckPath: /health
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod

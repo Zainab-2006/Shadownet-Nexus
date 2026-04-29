@@ -12,6 +12,6 @@ WORKDIR /app
 
 COPY --from=build /app/target/shadownet-nexus-1.0.0.jar app.jar
 
-EXPOSE 3001
+EXPOSE 10000
 
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["sh", "-c", "java -Dserver.port=${PORT:-10000} -Dserver.address=0.0.0.0 -jar /app/app.jar"]
