@@ -72,6 +72,10 @@ spring:
   config:
     activate:
       on-profile: prod
+  datasource:
+    url: ${DB_JDBC_URL:jdbc:mysql://${DB_HOST:${DATABASE_HOST:127.0.0.1}}:${DB_PORT:${DATABASE_PORT:3306}}/${DB_NAME:${DATABASE_NAME:shadownet}}?sslMode=${DB_SSL_MODE:DISABLED}&allowPublicKeyRetrieval=${DB_ALLOW_PUBLIC_KEY_RETRIEVAL:true}&serverTimezone=${DB_SERVER_TIMEZONE:UTC}&createDatabaseIfNotExist=${DB_CREATE_IF_NOT_EXIST:true}}
+    username: ${DB_USERNAME:${DATABASE_USER:}}
+    password: ${DB_PASSWORD:${DATABASE_PASSWORD:}}
   jpa:
     hibernate:
       ddl-auto: none
