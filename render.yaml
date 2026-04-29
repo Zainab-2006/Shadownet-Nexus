@@ -7,9 +7,9 @@ services:
     staticPublishPath: ./dist
     envVars:
       - key: VITE_API_BASE_URL
-        value: https://shadownet-backend.onrender.com
-      - key: VITE_WS_URL
-        value: https://shadownet-backend.onrender.com
+        value: https://shadownet-nexus-mecf.onrender.com
+      - key: VITE_WS_BASE_URL
+        value: https://shadownet-nexus-mecf.onrender.com/ws
     routes:
       - type: rewrite
         source: /*
@@ -25,12 +25,27 @@ services:
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
-      - key: DATABASE_URL
-        value: jdbc:mysql://shadownet-mysql:3306/shadownet?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
+      - key: DB_HOST
+        fromService:
+          type: pserv
+          name: shadownet-mysql
+          property: host
+      - key: DB_PORT
+        value: "3306"
+      - key: DB_NAME
+        value: shadownet
       - key: DB_USERNAME
         value: shadownet
       - key: DB_PASSWORD
         sync: false
+      - key: DB_SSL_MODE
+        value: DISABLED
+      - key: DB_ALLOW_PUBLIC_KEY_RETRIEVAL
+        value: "true"
+      - key: DB_SERVER_TIMEZONE
+        value: UTC
+      - key: DB_CREATE_IF_NOT_EXIST
+        value: "true"
       - key: DATABASE_PASSWORD
         sync: false
       - key: JWT_SECRET
