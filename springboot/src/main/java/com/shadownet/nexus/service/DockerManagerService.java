@@ -9,6 +9,7 @@ import com.shadownet.nexus.repository.ChallengeRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -31,11 +32,20 @@ public class DockerManagerService {
     private final Map<String, Integer> containerPorts = new ConcurrentHashMap<>();
     private final AtomicInteger portCounter = new AtomicInteger(8000);
 
+    @Value("${docker.runtime.enabled:false}")
+    private boolean dockerRuntimeEnabled;
+
     @Autowired
     private ChallengeRepository challengeRepository;
 
     @PostConstruct
     public void init() {
+        if (!dockerRuntimeEnabled) {
+            dockerClient = null;
+            logger.info("DockerManagerService disabled by configuration");
+            return;
+        }
+
         try {
             DefaultDockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
             ApacheDockerHttpClient httpClient = new ApacheDockerHttpClient.Builder()

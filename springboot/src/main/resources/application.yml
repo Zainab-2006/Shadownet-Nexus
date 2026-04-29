@@ -34,6 +34,7 @@ jwt:
 
 server:
   port: ${PORT:3001}
+  address: 0.0.0.0
   servlet:
     context-path: /
     session:
@@ -103,6 +104,10 @@ springdoc:
     enabled: ${SWAGGER_ENABLED:false}
   api-docs:
     enabled: ${API_DOCS_ENABLED:false}
+
+docker:
+  runtime:
+    enabled: ${DOCKER_RUNTIME_ENABLED:false}
 
 server:
   servlet:
