@@ -8,6 +8,19 @@ const normalizeApiPath = (url: string): string => {
   return url;
 };
 
+const isPublicAuthPath = (url?: string): boolean => {
+  if (!url) {
+    return false;
+  }
+
+  const normalized = normalizeApiPath(url);
+  return normalized === '/login'
+    || normalized === '/register'
+    || normalized === '/request-password-reset'
+    || normalized === '/reset-password'
+    || normalized === '/verify-email';
+};
+
 const toAxiosConfig = (url: string, config?: AxiosRequestConfig): AxiosRequestConfig => {
   const nextConfig: AxiosRequestConfig = {
     ...config,
@@ -47,7 +60,7 @@ class ApiClient {
     this.client.interceptors.request.use(
 (config: AxiosRequestConfig<unknown>) => {
         const token = localStorage.getItem('token');
-        if (token) {
+        if (token && !isPublicAuthPath(config.url)) {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 config.headers = { ...(config.headers || {}), Authorization: `Bearer ${token}` } as any;
         }
@@ -59,7 +72,10 @@ return config as AxiosRequestConfig;
     this.client.interceptors.response.use(
       (response: AxiosResponse) => response,
       (error: AxiosError) => {
-        if (error.response?.status === 401 || error.response?.status === 403) {
+        const requestUrl = typeof error.config?.url === 'string' ? error.config.url : undefined;
+        const authRequest = isPublicAuthPath(requestUrl);
+
+        if ((error.response?.status === 401 || error.response?.status === 403) && !authRequest) {
           localStorage.removeItem('token');
           localStorage.removeItem('user');
           localStorage.removeItem('refreshToken');

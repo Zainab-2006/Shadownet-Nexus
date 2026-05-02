@@ -48,10 +48,12 @@ public class AuthController {
             if (!probe.isConsumed()) {
                 logger.warn("Rate limit exceeded for registration from IP: {}", ipAddress);
                 return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
-                        .body(new ErrorResponse("RATE_LIMIT_EXCEEDED", "Too many registration attempts. Please try again later.", 429));
+                        .body(new ErrorResponse("RATE_LIMIT_EXCEEDED",
+                                "Too many registration attempts. Please try again later.", 429));
             }
 
-            String token = authService.register(request.getEmail(), request.getUsername(), request.getPassword(), ipAddress);
+            String token = authService.register(request.getEmail(), request.getUsername(), request.getPassword(),
+                    ipAddress);
             logger.info("User registered successfully from IP: {}", ipAddress);
             return ResponseEntity.status(HttpStatus.CREATED).body(buildAuthResponse(token));
         } catch (SecurityException e) {
@@ -77,7 +79,8 @@ public class AuthController {
             if (!probe.isConsumed()) {
                 logger.warn("Rate limit exceeded for login from IP: {}", ipAddress);
                 return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
-                        .body(new ErrorResponse("RATE_LIMIT_EXCEEDED", "Too many login attempts. Please try again later.", 429));
+                        .body(new ErrorResponse("RATE_LIMIT_EXCEEDED",
+                                "Too many login attempts. Please try again later.", 429));
             }
 
             String token = authService.login(request.getEmail(), request.getPassword(), ipAddress);
@@ -107,7 +110,8 @@ public class AuthController {
 
             if (!probe.isConsumed()) {
                 return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
-                        .body(new ErrorResponse("RATE_LIMIT_EXCEEDED", "Too many reset requests. Please try again later.", 429));
+                        .body(new ErrorResponse("RATE_LIMIT_EXCEEDED",
+                                "Too many reset requests. Please try again later.", 429));
             }
 
             authService.requestPasswordReset(email, ipAddress);
@@ -123,9 +127,19 @@ public class AuthController {
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<?> resetPassword(@RequestParam String token, @RequestParam String newPassword, HttpServletRequest httpRequest) {
+    public ResponseEntity<?> resetPassword(@RequestParam String token, @RequestParam String newPassword,
+            HttpServletRequest httpRequest) {
         try {
             String ipAddress = getClientIpAddress(httpRequest);
+            Bucket bucket = SecurityConfig.getRateLimitingBucket(ipAddress + ":password-reset-confirm");
+            ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
+
+            if (!probe.isConsumed()) {
+                return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                        .body(new ErrorResponse("RATE_LIMIT_EXCEEDED",
+                                "Too many password reset attempts. Please try again later.", 429));
+            }
+
             authService.resetPassword(token, newPassword, ipAddress);
             Map<String, String> response = new HashMap<>();
             response.put("message", "Password reset successfully");
@@ -140,8 +154,18 @@ public class AuthController {
     }
 
     @PostMapping("/verify-email")
-    public ResponseEntity<?> verifyEmail(@RequestParam String token) {
+    public ResponseEntity<?> verifyEmail(@RequestParam String token, HttpServletRequest httpRequest) {
         try {
+            String ipAddress = getClientIpAddress(httpRequest);
+            Bucket bucket = SecurityConfig.getRateLimitingBucket(ipAddress + ":verify-email");
+            ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
+
+            if (!probe.isConsumed()) {
+                return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                        .body(new ErrorResponse("RATE_LIMIT_EXCEEDED",
+                                "Too many email verification attempts. Please try again later.", 429));
+            }
+
             authService.verifyEmail(token);
             Map<String, String> response = new HashMap<>();
             response.put("message", "Email verified successfully");

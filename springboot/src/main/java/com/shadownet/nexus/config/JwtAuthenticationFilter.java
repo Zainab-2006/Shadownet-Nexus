@@ -16,11 +16,24 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Set;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+
+    // Public endpoints that should skip JWT authentication
+    private static final Set<String> PUBLIC_PATHS = Set.of(
+            "/api/login",
+            "/api/register",
+            "/api/request-password-reset",
+            "/api/reset-password",
+            "/api/verify-email",
+            "/health",
+            "/actuator/health",
+            "/api-docs",
+            "/swagger-ui.html");
 
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
@@ -28,6 +41,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     public JwtAuthenticationFilter(JwtUtil jwtUtil, UserDetailsService userDetailsService) {
         this.jwtUtil = jwtUtil;
         this.userDetailsService = userDetailsService;
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        // Check exact match or path starts with public path prefix
+        return PUBLIC_PATHS.contains(path) ||
+                PUBLIC_PATHS.stream().anyMatch(path::startsWith);
     }
 
     @Override
@@ -56,7 +77,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         } catch (Exception ex) {
             SecurityContextHolder.clearContext();
-            logger.debug("Ignoring invalid JWT for {} {}: {}", request.getMethod(), request.getRequestURI(), ex.getClass().getSimpleName());
+            logger.debug("Ignoring invalid JWT for {} {}: {}", request.getMethod(), request.getRequestURI(),
+                    ex.getClass().getSimpleName());
         }
 
         filterChain.doFilter(request, response);

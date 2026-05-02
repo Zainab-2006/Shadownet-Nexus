@@ -61,40 +61,41 @@ public class AuthService {
 
     public String register(String email, String username, String password, String ipAddress) {
         try {
-            if (!InputValidator.isValidEmail(email)) {
-                auditLogger.logFailedRegistration(email, ipAddress, "Invalid email format");
+            String normalizedEmail = email == null ? null : email.trim().toLowerCase();
+
+            if (!InputValidator.isValidEmail(normalizedEmail)) {
+                auditLogger.logFailedRegistration(normalizedEmail, ipAddress, "Invalid email format");
                 throw new IllegalArgumentException("Invalid email format");
             }
 
             if (!InputValidator.isValidUsername(username)) {
-                auditLogger.logFailedRegistration(email, ipAddress, "Invalid username format");
+                auditLogger.logFailedRegistration(normalizedEmail, ipAddress, "Invalid username format");
                 throw new IllegalArgumentException("Username must be 3-32 characters, alphanumeric with _ and -");
             }
 
             if (!InputValidator.isValidPassword(password)) {
-                auditLogger.logFailedRegistration(email, ipAddress, "Weak password");
+                auditLogger.logFailedRegistration(normalizedEmail, ipAddress, "Weak password");
                 throw new IllegalArgumentException(
                         "Password must be 8+ characters with uppercase, lowercase, digit, and special character");
             }
 
-            if (InputValidator.containsSqlInjectionAttempt(email)
-                    || InputValidator.containsSqlInjectionAttempt(username)
-                    || InputValidator.containsSqlInjectionAttempt(password)) {
-                auditLogger.logFailedRegistration(email, ipAddress, "SQL injection attempt detected");
+            if (InputValidator.containsSqlInjectionAttempt(normalizedEmail)
+                    || InputValidator.containsSqlInjectionAttempt(username)) {
+                auditLogger.logFailedRegistration(normalizedEmail, ipAddress, "SQL injection attempt detected");
                 throw new SecurityException("Invalid input detected");
             }
 
-            String emailHash = hashEmail(email);
+            String emailHash = hashEmail(normalizedEmail);
             if (userRepository.findByEmailHash(emailHash) != null) {
-                auditLogger.logFailedRegistration(email, ipAddress, "User already exists");
+                auditLogger.logFailedRegistration(normalizedEmail, ipAddress, "User already exists");
                 throw new RuntimeException("User already exists");
             }
 
             User user = new User();
             user.setId("user_" + UUID.randomUUID().toString().replace("-", ""));
-            user.setEmail(email);
+            user.setEmail(normalizedEmail);
             user.setEmailHash(emailHash);
-            user.setEmailEncrypted(encryptEmail(email));
+            user.setEmailEncrypted(encryptEmail(normalizedEmail));
             user.setUsername(username);
             user.setPasswordHash(passwordEncoder.encode(password));
             user.setDisplayName(username);
@@ -109,7 +110,7 @@ public class AuthService {
 
             userRepository.save(user);
             generateEmailVerificationToken(user);
-            auditLogger.logSuccessfulRegistration(user.getId(), email, ipAddress);
+            auditLogger.logSuccessfulRegistration(user.getId(), normalizedEmail, ipAddress);
             logger.info("User registered: {}", user.getId());
             return jwtUtil.generateToken(user.getId());
         } catch (Exception e) {
@@ -120,32 +121,33 @@ public class AuthService {
 
     public String login(String email, String password, String ipAddress) {
         try {
-            if (!InputValidator.isValidEmail(email)) {
-                auditLogger.logFailedLogin(email, ipAddress, "Invalid email format");
+            String normalizedEmail = email == null ? null : email.trim().toLowerCase();
+
+            if (!InputValidator.isValidEmail(normalizedEmail)) {
+                auditLogger.logFailedLogin(normalizedEmail, ipAddress, "Invalid email format");
                 throw new IllegalArgumentException("Invalid credentials");
             }
 
-            if (InputValidator.containsSqlInjectionAttempt(email)
-                    || InputValidator.containsSqlInjectionAttempt(password)) {
+            if (InputValidator.containsSqlInjectionAttempt(normalizedEmail)) {
                 auditLogger.logSuspiciousInput(null, "/api/login", "SQL_INJECTION", ipAddress);
                 throw new SecurityException("Invalid input detected");
             }
 
             if (auditLogger.isIpLocked(ipAddress)) {
-                auditLogger.logFailedLogin(email, ipAddress, "IP locked - brute force protection");
+                auditLogger.logFailedLogin(normalizedEmail, ipAddress, "IP locked - brute force protection");
                 throw new RuntimeException("Too many failed login attempts. Please try again later.");
             }
 
-            String emailHash = hashEmail(email);
+            String emailHash = hashEmail(normalizedEmail);
             User user = userRepository.findByEmailHash(emailHash);
 
             if (user == null || !passwordEncoder.matches(password, user.getPasswordHash())) {
-                auditLogger.logFailedLogin(email, ipAddress, "Invalid credentials");
+                auditLogger.logFailedLogin(normalizedEmail, ipAddress, "Invalid credentials");
                 throw new RuntimeException("Invalid credentials");
             }
 
             if (Boolean.TRUE.equals(user.getAccountLocked())) {
-                auditLogger.logFailedLogin(email, ipAddress, "Account locked");
+                auditLogger.logFailedLogin(normalizedEmail, ipAddress, "Account locked");
                 throw new RuntimeException("Account is locked. Contact support.");
             }
 
@@ -154,7 +156,7 @@ public class AuthService {
             user.setUpdatedAt(System.currentTimeMillis());
             userRepository.save(user);
 
-            auditLogger.logSuccessfulLogin(user.getId(), email, ipAddress);
+            auditLogger.logSuccessfulLogin(user.getId(), normalizedEmail, ipAddress);
             logger.info("User logged in: {}", user.getId());
             return jwtUtil.generateToken(user.getId());
         } catch (Exception e) {

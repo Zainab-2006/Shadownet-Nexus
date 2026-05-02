@@ -10,34 +10,49 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
 public class RateLimitingFilter extends OncePerRequestFilter {
-    
+
     private final RateLimitService rateLimitService;
-    
+
+    // Auth endpoints are rate-limited in AuthController, not here
+    private static final Set<String> AUTH_PATHS = Set.of(
+            "/api/login",
+            "/api/register",
+            "/api/request-password-reset",
+            "/api/reset-password",
+            "/api/verify-email");
+
     @Override
-    protected void doFilterInternal(HttpServletRequest request, 
-                                    HttpServletResponse response, 
-                                    FilterChain filterChain) 
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return AUTH_PATHS.contains(path);
+    }
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain)
             throws ServletException, IOException {
-        
+
         String path = request.getRequestURI();
         String clientId = getClientIdentifier(request);
-        
+
         RateLimitType limitType = getRateLimitType(path);
-        
+
         if (limitType != null && !rateLimitService.isAllowed(clientId, limitType)) {
             response.setStatus(429);
             response.setContentType("application/json");
             response.getWriter().write("{\"error\": \"Too many requests. Please try again later.\"}");
             return;
         }
-        
+
         filterChain.doFilter(request, response);
     }
-    
+
     private String getClientIdentifier(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
@@ -49,12 +64,15 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         }
         return "ip:" + request.getRemoteAddr();
     }
-    
+
     private RateLimitType getRateLimitType(String path) {
-        if (path.equals("/api/login") || path.equals("/api/register") || path.equals("/api/auth/login") || path.equals("/api/auth/register") || path.equals("/api/request-password-reset") || path.equals("/api/reset-password")) {
+        if (path.equals("/api/login") || path.equals("/api/register") || path.equals("/api/auth/login")
+                || path.equals("/api/auth/register") || path.equals("/api/request-password-reset")
+                || path.equals("/api/reset-password")) {
             return RateLimitType.AUTH;
         }
-        if (path.equals("/api/submit-flag") || path.equals("/api/puzzle/submit") || path.equals("/api/pcg/solo/submit")) {
+        if (path.equals("/api/submit-flag") || path.equals("/api/puzzle/submit")
+                || path.equals("/api/pcg/solo/submit")) {
             return RateLimitType.CHALLENGE_SUBMIT;
         }
         if (path.equals("/api/pcg/solo/generate")) {
@@ -63,7 +81,8 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         if (path.equals("/api/mission-runtime/start") || path.equals("/api/story-runtime/start")) {
             return RateLimitType.RUNTIME_START;
         }
-        if (path.equals("/api/mission-runtime/decision") || path.equals("/api/mission-runtime/evidence") || path.equals("/api/story-runtime/choice")) {
+        if (path.equals("/api/mission-runtime/decision") || path.equals("/api/mission-runtime/evidence")
+                || path.equals("/api/story-runtime/choice")) {
             return RateLimitType.RUNTIME_ACTION;
         }
         if (path.equals("/api/puzzle/hint")) {
@@ -77,7 +96,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         }
         return null;
     }
-    
+
     private String extractUsernameFromToken(String token) {
         try {
             String[] parts = token.split("\\.");
@@ -97,24 +116,23 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         }
         return "unknown";
     }
-    
+
     public enum RateLimitType {
-        AUTH(5, 900),           
-        CHALLENGE_SUBMIT(10, 300), 
-        HINT(3, 300),           
+        AUTH(5, 900),
+        CHALLENGE_SUBMIT(10, 300),
+        HINT(3, 300),
         TEAM_ACTION(20, 60),
         CONTAINER_SPAWN(5, 300),
         PCG_GENERATE(10, 300),
         RUNTIME_START(10, 300),
         RUNTIME_ACTION(30, 60);
-    
+
         public final int maxAttempts;
         public final int windowSeconds;
-        
+
         RateLimitType(int maxAttempts, int windowSeconds) {
             this.maxAttempts = maxAttempts;
             this.windowSeconds = windowSeconds;
         }
     }
 }
-
