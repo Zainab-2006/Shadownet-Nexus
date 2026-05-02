@@ -30,6 +30,9 @@ public class StoryChapter {
     
     @Builder.Default
     private int requiredTrustLevel = 0;
+
+    @Column(length = 40)
+    private String endingKey;
     
     @OneToMany(mappedBy = "chapter", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<StoryScene> scenes;

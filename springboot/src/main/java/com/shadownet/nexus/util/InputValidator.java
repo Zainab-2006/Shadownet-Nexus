@@ -17,9 +17,9 @@ public class InputValidator {
     private static final Pattern USERNAME_PATTERN = Pattern.compile(
             "^[A-Za-z0-9_-]{3,32}$");
 
-    // Prevent common SQL injection patterns
+    // Detect actual SQLi payloads instead of flagging normal punctuation.
     private static final Pattern SQL_INJECTION_PATTERN = Pattern.compile(
-            "('|(\\-\\-)|(;)|(\\*)|(/\\*)|(\\*/)|(<)|(>)|(\\^)|(\\[)|(\\])|(\\{)|(\\}))",
+            "(?i)(\\b(select|insert|update|delete|drop|union|alter|create|truncate|exec|execute)\\b|(--|#|/\\*)|\\b(or|and)\\b\\s+[\"'0-9a-z_]+\\s*=\\s*[\"'0-9a-z_]+|\\bunion\\b\\s+\\bselect\\b|\\binformation_schema\\b|\\bsleep\\s*\\(|\\bbenchmark\\s*\\()",
             Pattern.CASE_INSENSITIVE);
 
     // XSS prevention - dangerous HTML/JS characters

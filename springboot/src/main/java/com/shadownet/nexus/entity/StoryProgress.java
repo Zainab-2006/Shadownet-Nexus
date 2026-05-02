@@ -39,6 +39,9 @@ public class StoryProgress {
     
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "ending_achieved", length = 40)
+    private String endingAchieved;
     
     @Transient
     @Builder.Default

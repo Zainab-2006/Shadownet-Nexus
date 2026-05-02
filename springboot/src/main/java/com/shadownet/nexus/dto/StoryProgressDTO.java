@@ -24,4 +24,8 @@ public class StoryProgressDTO {
     private Map<Long, Long> choicesMade;
 
     private int completionPercentage;
+
+    private String endingAchieved;
+
+    private String endingTitle;
 }

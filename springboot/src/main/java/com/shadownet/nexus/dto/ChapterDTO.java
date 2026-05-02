@@ -22,5 +22,7 @@ public class ChapterDTO {
     private boolean isLocked;
     
     private int requiredTrustLevel;
+
+    private String endingKey;
 }
 

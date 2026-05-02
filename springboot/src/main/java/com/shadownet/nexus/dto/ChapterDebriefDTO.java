@@ -18,4 +18,6 @@ public class ChapterDebriefDTO {
     private List<String> evidenceMissed;
     private Integer trustOutcome;
     private String nextOperationalRisk;
+    private String endingAchieved;
+    private String endingTitle;
 }

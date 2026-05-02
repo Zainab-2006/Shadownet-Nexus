@@ -13,5 +13,8 @@ public interface TrustRepository extends JpaRepository<TrustEntity, Long> {
     @Query("SELECT t FROM TrustEntity t WHERE t.userId = :userId AND t.targetUserId = :targetId")
     Optional<TrustEntity> findTrustRelationship(@Param("userId") String userId, @Param("targetId") String targetId);
 
+    @Query("SELECT COALESCE(SUM(t.trustScore), 0) FROM TrustEntity t WHERE t.userId = :userId")
+    Integer sumTrustScoreByUserId(@Param("userId") String userId);
+
     boolean existsByUserIdAndTargetUserId(String userId, String targetUserId);
 }

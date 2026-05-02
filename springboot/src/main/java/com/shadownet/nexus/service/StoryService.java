@@ -21,8 +21,10 @@ public class StoryService {
         private final StoryProgressRepository progressRepository;
         private final UserRepository userRepository;
         private final TrustService trustService;
+        private final TrustRepository trustRepository;
         private final GameplayConsequenceService gameplayConsequenceService;
         private final UserStoryEvidenceRepository userStoryEvidenceRepository;
+        private final StoryEndingDefinitionRepository storyEndingDefinitionRepository;
         private final ObjectMapper objectMapper = new ObjectMapper();
 
         public List<ChapterDTO> getChapters(String username) {
@@ -93,6 +95,7 @@ public class StoryService {
                                 .filter(code -> !foundCodes.contains(code))
                                 .toList();
                 Integer trust = trustService.getTrustLevel(user, "STORY_GLOBAL");
+                EndingResolution ending = resolveAndPersistEnding(user, progress);
                 String conclusion = progress.getCompletedChapters().contains(chapterId)
                                 ? "Chapter completed with " + found.size() + " evidence item(s) found."
                                 : "Chapter in progress with " + found.size() + " evidence item(s) found.";
@@ -103,6 +106,8 @@ public class StoryService {
                                 .evidenceFound(found)
                                 .evidenceMissed(missed)
                                 .trustOutcome(trust)
+                                .endingAchieved(ending.endingKey())
+                                .endingTitle(ending.endingTitle())
                                 .nextOperationalRisk(missed.isEmpty()
                                                 ? "Evidence coverage is complete for this chapter."
                                                 : "Some evidence remains undiscovered; later conclusions may be incomplete.")
@@ -225,6 +230,8 @@ public class StoryService {
                                 if (!progress.getCompletedChapters().contains(currentScene.getChapter().getId())) {
                                         progress.getCompletedChapters().add(currentScene.getChapter().getId());
                                 }
+                        } else if (!progress.getCompletedChapters().contains(currentScene.getChapter().getId())) {
+                                progress.getCompletedChapters().add(currentScene.getChapter().getId());
                         }
                 }
 
@@ -235,6 +242,7 @@ public class StoryService {
 
                 progress.setUpdatedAt(LocalDateTime.now());
                 progressRepository.save(progress);
+                resolveAndPersistEnding(user, progress);
 
                 GameplayConsequenceService.StoryDecisionConsequence consequence = gameplayConsequenceService
                                 .applyStoryDecisionConsequences(user, currentScene, chosenChoice);
@@ -382,6 +390,7 @@ public class StoryService {
                                 .description(chapter.getDescription())
                                 .isLocked(isLocked)
                                 .requiredTrustLevel(chapter.getRequiredTrustLevel())
+                                .endingKey(chapter.getEndingKey())
                                 .build();
         }
 
@@ -403,6 +412,7 @@ public class StoryService {
                 int totalChapters = (int) chapterRepository.count();
                 int completedChapters = progress.getCompletedChapters().size();
                 int completionPercentage = totalChapters > 0 ? (completedChapters * 100) / totalChapters : 0;
+                EndingResolution ending = resolveEnding(progress.getUser(), progress);
 
                 return StoryProgressDTO.builder()
                                 .userId(progress.getUser().getId().toString())
@@ -411,6 +421,54 @@ public class StoryService {
                                 .completedChapters(progress.getCompletedChapters())
                                 .choicesMade(progress.getChoicesMade())
                                 .completionPercentage(completionPercentage)
+                                .endingAchieved(ending.endingKey())
+                                .endingTitle(ending.endingTitle())
                                 .build();
+        }
+
+        private EndingResolution resolveAndPersistEnding(User user, StoryProgress progress) {
+                EndingResolution ending = resolveEnding(user, progress);
+                if (!Objects.equals(progress.getEndingAchieved(), ending.endingKey())) {
+                        progress.setEndingAchieved(ending.endingKey());
+                        progress.setUpdatedAt(LocalDateTime.now());
+                        progressRepository.save(progress);
+                }
+                return ending;
+        }
+
+        private EndingResolution resolveEnding(User user, StoryProgress progress) {
+                Integer maxChapter = chapterRepository.findAllByOrderByChapterNumberAsc().stream()
+                                .map(StoryChapter::getChapterNumber)
+                                .max(Integer::compareTo)
+                                .orElse(0);
+                boolean finalChapterCompleted = chapterRepository.findByChapterNumber(maxChapter)
+                                .map(StoryChapter::getId)
+                                .map(progress.getCompletedChapters()::contains)
+                                .orElse(false);
+                if (!finalChapterCompleted) {
+                        return new EndingResolution(progress.getEndingAchieved(), null);
+                }
+
+                int totalTrust = Optional.ofNullable(trustRepository.sumTrustScoreByUserId(user.getId())).orElse(0);
+                String endingKey;
+                if (totalTrust >= 100) {
+                        endingKey = "ending_legend";
+                } else if (totalTrust >= 80) {
+                        endingKey = "ending_victory";
+                } else if (totalTrust >= 40) {
+                        endingKey = "ending_pyrrhic";
+                } else if (totalTrust < -30) {
+                        endingKey = "ending_betrayal";
+                } else {
+                        endingKey = "ending_fractured";
+                }
+
+                String endingTitle = storyEndingDefinitionRepository.findByEndingKey(endingKey)
+                                .map(StoryEndingDefinition::getEndingTitle)
+                                .orElse(null);
+                return new EndingResolution(endingKey, endingTitle);
+        }
+
+        private record EndingResolution(String endingKey, String endingTitle) {
         }
 }
