@@ -4,7 +4,6 @@ import com.shadownet.nexus.entity.Challenge;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 

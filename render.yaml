@@ -26,26 +26,25 @@ services:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
       - key: DB_HOST
-        fromService:
-          type: pserv
-          name: shadownet-mysql
-          property: host
+        value: mysql-205bd3e9-shadownet-nexus.c.aivencloud.com
       - key: DB_PORT
-        value: "3306"
+        value: "17380"
       - key: DB_NAME
-        value: shadownet
+        value: defaultdb
       - key: DB_USERNAME
-        value: shadownet
+        value: avnadmin
       - key: DB_PASSWORD
         sync: false
+      - key: EMAIL_ENCRYPTION_KEY
+        generateValue: true
       - key: DB_SSL_MODE
-        value: DISABLED
+        value: REQUIRED
       - key: DB_ALLOW_PUBLIC_KEY_RETRIEVAL
-        value: "true"
+        value: "false"
       - key: DB_SERVER_TIMEZONE
         value: UTC
       - key: DB_CREATE_IF_NOT_EXIST
-        value: "true"
+        value: "false"
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_EXPIRATION
@@ -58,23 +57,3 @@ services:
         value: "false"
       - key: API_DOCS_ENABLED
         value: "false"
-
-  - name: shadownet-mysql
-    type: pserv
-    runtime: image
-    plan: starter
-    image:
-      url: docker.io/mysql:8.0
-    disk:
-      name: mysql-data
-      mountPath: /var/lib/mysql
-      sizeGB: 10
-    envVars:
-      - key: MYSQL_DATABASE
-        value: shadownet
-      - key: MYSQL_USER
-        value: shadownet
-      - key: MYSQL_PASSWORD
-        sync: false
-      - key: MYSQL_ROOT_PASSWORD
-        sync: false

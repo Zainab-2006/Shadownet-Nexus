@@ -1,16 +1,9 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/apiClient';
+import type { AuthContextType } from './AuthContext.hooks';
 
-interface AuthContextType {
-  token: string | null;
-  user: unknown;
-  login: (token: string, user: unknown) => void;
-  logout: () => void;
-  isValidating: boolean;
-}
-
-const AuthContext = createContext<AuthContextType | null>(null);
+export const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [token, setToken] = useState<string | null>(null);
@@ -80,10 +73,4 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       {children}
     </AuthContext.Provider>
   );
-};
-
-export const useAuthentication = () => {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuthentication must be used within AuthProvider');
-  return context;
 };

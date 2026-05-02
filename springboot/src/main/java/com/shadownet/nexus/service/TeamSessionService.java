@@ -80,7 +80,8 @@ public class TeamSessionService {
                         "unlocked", "ACCUSATION_UNLOCKED".equals(session.getStatus())
                                 || session.getEvidenceMap().values().stream().mapToInt(Integer::intValue).sum() >= 3,
                         "result", session.getAccusationResult() == null ? "pending" : session.getAccusationResult(),
-                        "consequence", "Correct accusations stabilize trust; wrong accusations fracture the mission cell."))
+                        "consequence",
+                        "Correct accusations stabilize trust; wrong accusations fracture the mission cell."))
                 .accusationUnlocked("ACCUSATION_UNLOCKED".equals(session.getStatus())
                         || session.getEvidenceMap().values().stream().mapToInt(Integer::intValue).sum() >= 3)
                 .accusationResult(session.getAccusationResult())
@@ -167,9 +168,27 @@ public class TeamSessionService {
         if (!allReady) {
             throw new IllegalStateException("All team members must be ready before start");
         }
+
+        // Assign hidden traitor when mission starts (if there are enough players)
+        if (session.getMembers().size() >= 2 && (session.getTraitorId() == null || session.getTraitorId().isBlank())) {
+            // Get potential traitors (all members EXCEPT the leader)
+            List<String> potentialTraitors = session.getMembers().stream()
+                    .filter(m -> !m.equals(leaderId))
+                    .collect(Collectors.toList());
+            if (!potentialTraitors.isEmpty()) {
+                // Select random traitor from non-leader members
+                int traitorIndex = (int) (Math.random() * potentialTraitors.size());
+                String hiddenTraitor = potentialTraitors.get(traitorIndex);
+                session.setTraitorId(hiddenTraitor);
+                appendActivity(session, "mission:traitor_assigned", "SYSTEM",
+                        "WARNING: Potential infiltrator detected within team cell. Proceed with caution.");
+            }
+        }
+
         session.setStatus("active");
         session.setTimeStarted(Instant.now().toEpochMilli());
-        appendActivity(session, "team:start", userId, "Mission started.");
+        appendActivity(session, "team:start", userId,
+                "Mission started. " + session.getMembers().size() + " operators deployed.");
         session.setUpdatedAt(Instant.now().toEpochMilli());
         session.serializeEvidenceMap();
         return teamSessionRepository.save(session);

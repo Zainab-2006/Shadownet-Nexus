@@ -3,6 +3,8 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
+const devProxyTarget = process.env.VITE_DEV_PROXY_TARGET || "http://localhost:3001";
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   define: {
@@ -11,10 +13,10 @@ export default defineConfig(({ mode }) => ({
   },
   server: {
     host: "::",
-    port: 8080,
+    port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:3001',
+        target: devProxyTarget,
         changeOrigin: true,
         configure: (proxy, options) => {
           proxy.on('proxyReq', (proxyReq, req, res) => {
@@ -33,7 +35,7 @@ export default defineConfig(({ mode }) => ({
         }
       },
       '/ws': {
-        target: 'http://localhost:3001',
+        target: devProxyTarget,
         changeOrigin: true,
         ws: true,
       }

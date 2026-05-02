@@ -1,18 +1,5 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
-
-const DEFAULT_API_ORIGIN = 'https://shadownet-nexus-mecf.onrender.com';
-
-const normalizeApiOrigin = (value?: string): string => {
-  if (!value) {
-    return DEFAULT_API_ORIGIN;
-  }
-
-  return value.replace(/\/+$/, '').replace(/\/api$/, '');
-};
-
-const API_BASE_URL = import.meta.env.DEV && !import.meta.env.VITE_API_BASE_URL
-  ? '/api'
-  : `${normalizeApiOrigin(import.meta.env.VITE_API_BASE_URL)}/api`;
+import { API_BASE } from './config';
 
 const normalizeApiPath = (url: string): string => {
   if (url.startsWith('/api/')) {
@@ -50,7 +37,7 @@ class ApiClient {
 
   constructor() {
     this.client = axios.create({
-      baseURL: API_BASE_URL,
+      baseURL: API_BASE,
       withCredentials: true,
       headers: {
         'Content-Type': 'application/json',

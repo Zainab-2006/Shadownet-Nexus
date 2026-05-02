@@ -18,10 +18,16 @@ public class EvidenceService {
     /**
      * Legacy compatibility surface only. Team evidence mutates trust/session state
      * and must be authored through GameplayConsequenceService with a user context.
+     * 
+     * @deprecated Since 1.5.0. Use
+     *             GameplayConsequenceService.addEvidenceToSession() instead.
+     *             This method will be removed in v2.0.0.
+     *             See migration guide: docs/v2-migration.md#evidence-service
      */
-    @Deprecated
+    @Deprecated(since = "1.5.0", forRemoval = true)
     public void addEvidence(String teamId, String evidenceData) {
-        throw new UnsupportedOperationException("Team evidence mutation requires GameplayConsequenceService user context");
+        throw new UnsupportedOperationException(
+                "Team evidence mutation requires GameplayConsequenceService user context");
     }
 
     public Map<String, Integer> getEvidence(String teamId) {

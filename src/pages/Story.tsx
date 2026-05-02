@@ -2,7 +2,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '@/context/GameContext';
 
-import { useAuthentication } from '@/context/AuthContext';
+import { useAuthentication } from '@/context/AuthContext.hooks';
 import Navbar from '@/components/layout/Navbar';
 import PageTransition from '@/components/layout/PageTransition';
 import ParticleBackground from '@/components/layout/ParticleBackground';

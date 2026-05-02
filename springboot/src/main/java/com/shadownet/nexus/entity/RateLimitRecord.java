@@ -25,6 +25,7 @@ public class RateLimitRecord {
     private String actionType;
     
     @Column(nullable = false)
+    @Builder.Default
     private int attemptCount = 1;
     
     @Column(name = "first_attempt")

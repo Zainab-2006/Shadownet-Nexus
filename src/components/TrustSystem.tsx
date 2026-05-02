@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Heart, Skull, Shield } from 'lucide-react';
 import { CyberButton } from '@/components/ui/cyber-button';
 import { Character, TrustChoice } from '@/types';
-import { useAudioContext } from '@/context/AudioProvider';
+import { useAudioContext } from '@/context/AudioProvider.hooks';
 
 interface TrustMeterProps {
   operator: Character;

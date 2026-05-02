@@ -1,7 +1,6 @@
 package com.shadownet.nexus.mapper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.shadownet.nexus.dto.ChallengeListDTO;
 import com.shadownet.nexus.dto.PuzzleChallengeDTO;
 import com.shadownet.nexus.dto.PuzzleSessionDTO;
 import com.shadownet.nexus.entity.Challenge;

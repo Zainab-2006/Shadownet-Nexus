@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, Shield, Target, Trophy, BookOpen, User, LogOut } from 'lucide-react';
 import { CyberButton } from '@/components/ui/cyber-button';
 import { cn } from '@/lib/utils';
-import { useAuthentication } from '@/context/AuthContext';
+import { useAuthentication } from '@/context/AuthContext.hooks';
 
 const navLinks = [
   { href: '/operators', label: 'Operators', icon: User },

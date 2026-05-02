@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import ParticleBackground from '@/components/layout/ParticleBackground';
 import PageTransition from '@/components/layout/PageTransition';
 import { useRegister } from '@/api/shadownetApi';
-import { useAuthentication } from '@/context/AuthContext';
+import { useAuthentication } from '@/context/AuthContext.hooks';
 import { useNarrator } from '@/context/NarratorContext';
 
 const passwordRequirements = [

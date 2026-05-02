@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import jakarta.annotation.PostConstruct;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.MessageDigest;
@@ -48,6 +49,15 @@ public class AuthService {
     private static final long EMAIL_VERIFICATION_TOKEN_EXPIRY = 24 * 60 * 60 * 1000;
     private static final long PASSWORD_RESET_TOKEN_EXPIRY = 60 * 60 * 1000;
     private static final String AES_ENCRYPTION_KEY = System.getenv("EMAIL_ENCRYPTION_KEY");
+
+    @PostConstruct
+    public void validateEncryptionKey() {
+        if (AES_ENCRYPTION_KEY == null || AES_ENCRYPTION_KEY.isEmpty()) {
+            throw new IllegalStateException(
+                    "EMAIL_ENCRYPTION_KEY environment variable must be set before application startup. " +
+                            "Add EMAIL_ENCRYPTION_KEY to .env, docker-compose, or production environment variables.");
+        }
+    }
 
     public String register(String email, String username, String password, String ipAddress) {
         try {
@@ -98,7 +108,7 @@ public class AuthService {
             user.setLevel(1);
 
             userRepository.save(user);
-                        generateEmailVerificationToken(user);
+            generateEmailVerificationToken(user);
             auditLogger.logSuccessfulRegistration(user.getId(), email, ipAddress);
             logger.info("User registered: {}", user.getId());
             return jwtUtil.generateToken(user.getId());

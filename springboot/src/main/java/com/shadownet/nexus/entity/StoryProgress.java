@@ -30,18 +30,22 @@ public class StoryProgress {
     private Long currentSceneId;
     
     @Column(name = "completed_chapters", columnDefinition = "JSON")
+    @Builder.Default
     private String completedChaptersJson = "[]";
     
     @Column(name = "choices_made", columnDefinition = "JSON")
+    @Builder.Default
     private String choicesMadeJson = "{}";
     
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
     @Transient
+    @Builder.Default
     private List<Long> completedChapters = new ArrayList<>();
     
     @Transient
+    @Builder.Default
     private Map<Long, Long> choicesMade = new HashMap<>();
     
     @PostLoad

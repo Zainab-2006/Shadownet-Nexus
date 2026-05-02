@@ -11,7 +11,7 @@ import { PlayerDirective } from '@/components/PlayerDirective';
 import ParticleBackground from '@/components/layout/ParticleBackground';
 import PageTransition from '@/components/layout/PageTransition';
 import { useGame } from '@/context/GameContext';
-import { useAuthentication } from '@/context/AuthContext';
+import { useAuthentication } from '@/context/AuthContext.hooks';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/apiClient';
 import { PuzzleStageView, usePuzzleSession, useSubmitStage, useGetHint } from '@/api/puzzleApi';
@@ -190,7 +190,7 @@ const ChallengeModal = ({
       setHintsUsed(session.hintsUsed);
       if (!timerId) startTimer();
     }
-  }, [session, sessionLoading]);
+  }, [session, sessionLoading, startTimer, timerId]);
 
   const handleRevealAnswer = () => {
     setTrainingMode(true);

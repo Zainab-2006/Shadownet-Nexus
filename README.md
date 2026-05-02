@@ -28,17 +28,18 @@ Invoke-WebRequest http://localhost:3001/api/challenges
 
 ## Deploy On Render
 
-This repo now includes [render.yaml](/C:/Users/zain/Downloads/shadownet-nexus/render.yaml:1) for a three-service Render deployment:
+This repo now includes [render.yaml](/C:/Users/zain/Downloads/shadownet-nexus/render.yaml:1) for a two-service Render deployment backed by external MySQL:
 
 - Static frontend: `shadownet-frontend`
 - Spring Boot backend: `shadownet-backend`
-- Private MySQL: `shadownet-mysql`
+- External Aiven MySQL
 
 Important setup notes:
 
 - Render should create the frontend and backend from this repo automatically via Blueprint sync.
-- The MySQL service uses a persistent disk and must not be deployed on the free plan. The Blueprint sets it to `starter`.
-- Do not commit secrets. Set `DB_PASSWORD`, `DATABASE_PASSWORD`, `MYSQL_PASSWORD`, and `MYSQL_ROOT_PASSWORD` in Render only.
+- The backend is configured for Aiven MySQL over SSL using `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`, and `DB_SSL_MODE=REQUIRED`.
+- Do not commit secrets. Set `DB_PASSWORD` in Render only.
+- Set `EMAIL_ENCRYPTION_KEY` in Render. Backend startup will fail without it.
 - After Render creates the frontend URL, update the backend `CORS_ORIGINS` value if you rename the frontend service or attach a custom domain.
 
 Recommended Render flow:
@@ -46,7 +47,7 @@ Recommended Render flow:
 1. Push this repo to GitHub.
 2. In Render, choose `New +` -> `Blueprint`.
 3. Select this repository and confirm `render.yaml`.
-4. Before the first deploy completes, set the secret values for the MySQL and backend password variables in the Render dashboard.
+4. Before the first deploy completes, set the `DB_PASSWORD` secret value in the Render dashboard.
 5. After deploy, open the backend health endpoint and frontend site.
 
 Minimal post-deploy checks:

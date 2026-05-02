@@ -2,6 +2,7 @@ package com.shadownet.nexus.entity;
 
 import jakarta.persistence.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 import java.util.Map;
 import java.util.UUID;
 
@@ -110,7 +111,11 @@ public class UserEvent {
 
     public Map<String, Object> getMetadata() {
         try {
-            return new ObjectMapper().readValue(metadataJson, Map.class);
+            if (metadataJson == null || metadataJson.isEmpty()) {
+                return Map.of();
+            }
+            return new ObjectMapper().readValue(metadataJson, new TypeReference<Map<String, Object>>() {
+            });
         } catch (Exception e) {
             return Map.of();
         }

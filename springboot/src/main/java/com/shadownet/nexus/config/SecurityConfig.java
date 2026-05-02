@@ -38,7 +38,7 @@ public class SecurityConfig {
     @Autowired
     private RateLimitingFilter rateLimitingFilter;
 
-    @Value("${spring.web.cors.allowed-origins:http://localhost:5173,http://localhost:3000,http://localhost:8080,http://localhost:8081,https://shadownet-nexus.vercel.app,https://*.vercel.app}")
+    @Value("${spring.web.cors.allowed-origins:http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://localhost:8080,http://127.0.0.1:8080,http://localhost:8081,https://shadownet-frontend.onrender.com,https://shadownet-nexus.vercel.app}")
     private String allowedOrigins;
 
     private static final Map<String, Bucket> rateLimitingBuckets = new ConcurrentHashMap<>();
@@ -84,7 +84,7 @@ public class SecurityConfig {
                                 "/api/leaderboard")
                         .permitAll()
                         .requestMatchers("/api/**").authenticated()
-                        .anyRequest().permitAll())
+                        .anyRequest().authenticated())
                 .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

@@ -5,7 +5,6 @@ import com.shadownet.nexus.entity.ChallengeStage;
 import com.shadownet.nexus.repository.ChallengeSessionRepository;
 import com.shadownet.nexus.repository.ChallengeStageRepository;
 import com.shadownet.nexus.util.AuthenticationAuditLogger;
-import com.shadownet.nexus.service.GameService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -61,11 +60,13 @@ public class ChallengeSessionService {
     @Transactional
     public boolean submitStage(String sessionId, int stageNumber, String flag) {
         Optional<ChallengeSession> optSession = sessionRepository.findById(sessionId);
-        if (optSession.isEmpty()) return false;
+        if (optSession.isEmpty())
+            return false;
 
         ChallengeSession session = optSession.get();
         List<ChallengeStage> stages = getStages(session.getChallengeId());
-        if (stages.size() < stageNumber) return false;
+        if (stages.size() < stageNumber)
+            return false;
 
         ChallengeStage stage = stages.get(stageNumber - 1);
         String flagHash = new GameService().hashFlag(flag);
@@ -92,11 +93,13 @@ public class ChallengeSessionService {
     @Transactional
     public String getHint(String sessionId) {
         Optional<ChallengeSession> optSession = sessionRepository.findById(sessionId);
-        if (optSession.isEmpty()) return null;
+        if (optSession.isEmpty())
+            return null;
 
         ChallengeSession session = optSession.get();
         int hintsUsed = session.getHintsUsed();
-        if (hintsUsed >= 3) return null;
+        if (hintsUsed >= 3)
+            return null;
 
         session.setHintsUsed(hintsUsed + 1);
         session.setPenaltyMultiplier(1.0 + (hintsUsed + 1) * 0.1);
@@ -104,17 +107,19 @@ public class ChallengeSessionService {
 
         List<ChallengeStage> stages = getStages(session.getChallengeId());
         ChallengeStage stage = stages.get(session.getCurrentStage() - 1);
-        auditLogger.logDataAccess(session.getUserId(), "HINT", sessionId, "STAGE_" + session.getCurrentStage(), "hints=" + hintsUsed);
+        auditLogger.logDataAccess(session.getUserId(), "HINT", sessionId, "STAGE_" + session.getCurrentStage(),
+                "hints=" + hintsUsed);
         return stage.getHint();
     }
 
     @Transactional
     public void applyOperatorBonus(String sessionId, String operator) {
         Optional<ChallengeSession> optSession = sessionRepository.findById(sessionId);
-        if (optSession.isEmpty()) return;
+        if (optSession.isEmpty())
+            return;
 
         ChallengeSession session = optSession.get();
-        
+
         switch (operator) {
             case "op_hacker":
                 session.setPenaltyMultiplier(Math.max(0.5, session.getPenaltyMultiplier() * 0.8)); // Reduce penalty
@@ -126,7 +131,7 @@ public class ChallengeSessionService {
             default:
                 break;
         }
-        
+
         sessionRepository.save(session);
     }
 }

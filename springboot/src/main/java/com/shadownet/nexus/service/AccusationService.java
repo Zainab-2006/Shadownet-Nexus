@@ -17,8 +17,13 @@ public class AccusationService {
      * Legacy compatibility surface only. Team accusation mutates trust/session
      * state and must be authored through GameplayConsequenceService with a user
      * context.
+     * 
+     * @deprecated Since 1.5.0. Use GameplayConsequenceService.processAccusation()
+     *             instead.
+     *             This method will be removed in v2.0.0.
+     *             See migration guide: docs/v2-migration.md#accusation-service
      */
-    @Deprecated
+    @Deprecated(since = "1.5.0", forRemoval = true)
     public boolean submitAccusation(String teamId, String traitorId) {
         throw new UnsupportedOperationException("Team accusation requires GameplayConsequenceService user context");
     }

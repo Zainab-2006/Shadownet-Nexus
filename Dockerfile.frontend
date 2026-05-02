@@ -2,6 +2,9 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+# Set Docker mode for proxy configuration
+ENV DOCKER=1
+
 # Install dependencies
 COPY package*.json bun.lock* pnpm-lock.yaml* ./
 RUN npm ci

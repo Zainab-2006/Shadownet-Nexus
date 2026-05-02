@@ -27,6 +27,7 @@ services:
       DB_USERNAME: shadownet
       DB_PASSWORD: ${DB_PASSWORD:-root}
       JWT_SECRET: ${JWT_SECRET:-change-me-local-only-jwt-secret-64-characters-minimum}
+      EMAIL_ENCRYPTION_KEY: ${EMAIL_ENCRYPTION_KEY:-local-dev-email}
       CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173,http://localhost:8080,http://127.0.0.1:8080
     depends_on:
       db:

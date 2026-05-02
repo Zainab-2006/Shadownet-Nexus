@@ -28,6 +28,7 @@ public class StoryChapter {
     @Builder.Default
     private boolean isLocked = true;
     
+    @Builder.Default
     private int requiredTrustLevel = 0;
     
     @OneToMany(mappedBy = "chapter", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

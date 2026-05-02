@@ -1,31 +1,34 @@
 -- V20__full_operator_seed.sql
--- Seed all 25 operators from frontend roster for backend truth
+-- Seed all 24 operators from frontend roster for backend truth
+-- HERO Faction (13 operators) + VILLAIN Faction (11 operators) = 24 total
 
 INSERT IGNORE INTO operators (id, name, role, abilities, unlock_cost, backstory) VALUES
-('op_draven-holt', 'Draven Holt', 'Supreme Commander', '["Psychological Warfare", "Black Market Diplomacy"]', 0, 'Draven Holt directs large-scale theater operations.'),
-('op_kira-vale', 'Kira Vale', 'Precision Assassin', '["Thermal Cloaking", "Zero-Sound Sniping"]', 0, 'Kira Vale is a surgical hunter built for silent elimination.'),
-('op_dante-morgana', 'Dante Morgana', 'System Architect', '["Zero-Day Engineering", "Infrastructure Takeover"]', 0, 'Dante Morgana designs the battlefield before anyone enters it.'),
-('op_elara-voss', 'Elara Voss', 'Cyber Intelligence Queen', '["Behavioral Threat Prediction", "Surveillance Logic"]', 0, 'Elara Voss fuses predictive analytics into mission-grade foresight.'),
-('op_jax-storm', 'Jax Storm', 'Tactical Commander', '["Battlefield Simulation", "Electronic Warfare"]', 0, 'Jax Storm coordinates battlefield tempo.'),
-('op_kai-chen', 'Kai Chen', 'Phantom Assassin', '["Silent Neutralization", "Zero-Footprint Infiltration"]', 0, 'Kai Chen erases presence and neutralizes targets.'),
-('op_marcus-webb', 'Marcus Webb', 'Fortress Architect', '["Cyber Defense Architecture", "Threat Containment"]', 0, 'Marcus Webb builds defensive architecture under pressure.'),
-('op_sable', 'Sable', 'Malware Architect', '["Polymorphic Malware", "Rootkit Engineering"]', 0, 'Sable writes living malicious code.'),
-('op_valerie-cross', 'Valerie Cross', 'War Strategy Engine', '["Mission Probability Forecasting", "Risk Matrix"]', 0, 'Valerie Cross turns probability into combat logic.'),
-('op_yuna-park', 'Yuna Park', 'Network Guardian', '["Secure Communication", "Signal Interception"]', 0, 'Yuna Park dominates communication layers.'),
-('op_darren-kane', 'Darren Kane', 'Exploit Engineer', '["Memory Exploitation", "Kernel Attacks"]', 0, 'Darren Kane weaponizes memory and binaries.'),
-('op_sloane-harper', 'Sloane Harper', 'Mission Logistics Master', '["Real-Time Tactical Routing", "Multi-Squad Coordination"]', 0, 'Sloane Harper keeps squads connected.'),
-('op_echo-13', 'Echo-13', 'AI Combat Machine', '["Autonomous Combat", "Drone Swarm Control"]', 0, 'Echo-13 is a hardened autonomous combat chassis.'),
-('op_magnus', 'Magnus', 'Supreme Villain', '["Global Chaos Engineering", "Strategic Deception"]', 0, 'Magnus rules through orchestrated chaos.'),
-('op_dr-rowan', 'Dr. Rowan', 'Psycho-AI Engineer', '["Neural Hacking", "Mind-Control Code"]', 0, 'Dr. Rowan engineers attacks on cognition.'),
-('op_ciphershade', 'CipherShade', 'Neural Cyber Assassin', '["Cybernetic Reflex", "Neural Kill Protocols"]', 0, 'CipherShade is a lethal cybernetic executioner.'),
-('op_iris', 'Iris', 'Reality Distortion Specialist', '["Reality Distortion Tech", "Perception Hijacking"]', 0, 'Iris fractures perception itself.'),
-('op_vex', 'Vex', 'Tactical Combat AI', '["Threat Interception", "Heavy Weapon Control"]', 0, 'Vex intercepts threats head-on.'),
-('op_juno', 'Juno', 'Cyber Assassination Specialist', '["Cyber Assassination", "Ghost Payload"]', 0, 'Juno specializes in remote execution chains.'),
-('op_kael', 'Kael', 'Infrastructure Annihilator', '["Logic Bomb Engineering", "System Meltdown"]', 0, 'Kael turns systems into demolition sites.'),
-('op_maya-santos', 'Maya Santos', 'Reality System Corruptor', '["Reality System Corruption", "Neural Desync"]', 0, 'Maya destabilizes networks and minds.'),
-('op_redline-ghost', 'Redline Ghost', 'Hyper-Speed Infiltrator', '["Hyper-Speed Infiltration", "Quantum Routing"]', 0, 'Redline Ghost moves faster than response systems.'),
-('op_widowbyte', 'WidowByte', 'Silent Execution Malware', '["Silent Execution Malware", "Kill-Signal Programming"]', 0, 'WidowByte builds kill-signal traps.'),
-('op_nullbyte', 'NullByte', 'Ransomware Architect', '["Self-Evolving Ransomware", "AI Encryption Loops"]', 0, 'NullByte engineers adaptive ransomware.');
+-- HEROES - NEXUS Division
+('op_draven-holt', 'Draven Holt', 'Supreme Commander', '["Psychological Warfare", "Black Market Diplomacy", "Multi-Faction Influence", "Crisis Manipulation"]', 0, 'Draven Holt directs large-scale theater operations through fear, leverage, and strategic control over fractured alliances.'),
+('op_kira-vale', 'Kira Vale', 'Precision Assassin', '["Thermal Cloaking", "Zero-Sound Sniping", "Infiltration Hacking", "Kill-Zone Mapping"]', 0, 'Kira Vale is a surgical hunter built for silent elimination, stealth penetration, and impossible shot placement.'),
+('op_dante-morgana', 'Dante Morgana', 'System Architect', '["Zero-Day Engineering", "Infrastructure Takeover", "Cyber Battlefield Design", "Kill-Switch Architecture"]', 0, 'Dante Morgana designs the battlefield before anyone enters it, turning infrastructure into a weaponized operating system.'),
+('op_elara-voss', 'Elara Voss', 'Cyber Intelligence Queen', '["Behavioral Threat Prediction", "Signal Pattern Recognition", "Threat Forecasting", "Drone Swarm Analytics"]', 0, 'Elara Voss sees threats before they materialize through behavioral modeling and signal anomaly detection.'),
+('op_jax-storm', 'Jax Storm', 'Tactical Commander', '["Battlefield Simulation", "Multi-Team Coordination", "Electronic Warfare Control", "Strategic Kill Planning"]', 0, 'Jax Storm coordinates battlefield tempo, route control, and synchronized action across hostile operational zones.'),
+('op_kai-chen', 'Kai Chen', 'Phantom Assassin', '["Silent Neutralization", "Optical Cloaking", "Zero-Footprint Infiltration", "Threat Erasure"]', 0, 'Kai Chen erases presence, neutralizes targets, and exits before the system even registers a breach.'),
+('op_marcus-webb', 'Marcus Webb', 'Fortress Architect', '["Cyber Defense Architecture", "Threat Containment", "Intrusion Prediction", "Digital Shielding"]', 0, 'Marcus Webb builds and holds defensive architecture under extreme pressure, turning chaos into secure ground.'),
+('op_sable', 'Sable', 'Malware Architect', '["Polymorphic Malware Creation", "Rootkit Engineering", "AI Virus Design", "Darknet Exploitation"]', 0, 'Sable writes living malicious code, designing viral intelligence that mutates faster than teams can contain it.'),
+('op_valerie-cross', 'Valerie Cross', 'War Strategy Engine', '["Mission Probability Forecasting", "Tactical Decision Trees", "Enemy Movement Prediction", "Risk Matrix Engineering"]', 0, 'Valerie Cross turns raw probability into executable combat logic and long-range operational certainty.'),
+('op_yuna-park', 'Yuna Park', 'Network Guardian', '["Secure Communication Systems", "Battlefield Radio Hacking", "Tactical Frequency Control", "Signal Interception"]', 0, 'Yuna Park dominates communication layers, controlling how information moves through the battlefield and who gets to hear it.'),
+('op_darren-kane', 'Darren Kane', 'Exploit Engineer', '["Memory Exploitation", "Kernel Attacks", "Code Injection Mastery", "Binary Weaponization"]', 0, 'Darren Kane specializes in low-level exploitation, weaponizing memory, binary structure, and execution flow.'),
+('op_sloane-harper', 'Sloane Harper', 'Mission Logistics Master', '["Real-Time Tactical Routing", "Field Communication Control", "Multi-Squad Coordination", "Emergency Signal Extraction"]', 0, 'Sloane Harper keeps distributed squads connected, routed, and recoverable through live tactical disruption.'),
+('op_echo-13', 'Echo-13', 'AI Combat Machine', '["Autonomous Combat Algorithms", "EMP Resistance", "Heavy Fire Suppression", "Drone Swarm Control"]', 0, 'Echo-13 is a hardened autonomous combat chassis built for suppression, survivability, and drone-linked battlefield pressure.'),
+-- VILLAINS - The Shadow Network
+('op_magnus', 'Magnus', 'Supreme Villain', '["Global Chaos Engineering", "Multi-Layer Strategic Deception", "Psychological Empire Control"]', 0, 'Magnus rules the Shadow Network through orchestrated chaos, multi-layered deception, and psychological dominance.'),
+('op_dr-rowan', 'Dr. Rowan', 'Psycho-AI Engineer', '["Neural Hacking", "BrainComputer Interface Attacks", "Mind-Control Code", "Memory Manipulation"]', 0, 'Dr. Rowan engineers direct attacks on cognition, memory, and thought architecture through machine-assisted intrusion.'),
+('op_ciphershade', 'CipherShade', 'Neural Cyber Assassin', '["Cybernetic Reflex Boost", "Neural Kill Protocols", "Assassin AI Core", "Combat Prediction"]', 0, 'CipherShade is a lethal cybernetic executioner, combining predictive combat logic with reflex-enhanced kill protocols.'),
+('op_iris', 'Iris', 'Reality Distortion Specialist', '["Reality Distortion Tech", "Neural Illusion Injection", "Perception Hijacking", "Sensory Manipulation"]', 0, 'Iris fractures perception itself, turning sensory trust into a weapon against any operator who relies on what they see.'),
+('op_vex', 'Vex', 'Tactical Combat AI', '["Tactical Combat AI", "Threat Interception", "Heavy Weapon Control", "Human Shield Protocol"]', 0, 'Vex serves as the armored pressure core of the Shadow Network, intercepting threats and crushing resistance head-on.'),
+('op_juno', 'Juno', 'Cyber Assassination Specialist', '["Cyber Assassination", "Remote Kill Injections", "Ghost Payload Deployment", "Neural Backdoor"]', 0, 'Juno specializes in remote execution chains, ghost payloads, and invisible entry into live neural systems.'),
+('op_maya-santos', 'Maya Santos', 'Reality System Corruptor', '["Reality System Corruption", "Neural Desync Attacks", "Global Jammer Control", "Digital Riot Creation"]', 0, 'Maya Santos destabilizes both networks and minds, creating synchronized disorder across digital and physical spaces.'),
+('op_kael', 'Kael', 'Infrastructure Annihilator', '["Logic Bomb Engineering", "Infrastructure Destruction", "Hybrid Cyber-Explosive Warfare", "System Meltdown Triggers"]', 0, 'Kael turns entire systems into demolition sites through hybrid cyber-explosive warfare and collapse triggers.'),
+('op_redline-ghost', 'Redline Ghost', 'Hyper-Speed Infiltrator', '["Hyper-Speed Infiltration", "Network Sprint Attacks", "Quantum Routing", "Instant Payload Drop"]', 0, 'Redline Ghost moves faster than response systems can adapt, delivering payloads before defenders can establish context.'),
+('op_widowbyte', 'WidowByte', 'Silent Execution Malware Specialist', '["Silent Execution Malware", "Kill-Signal Programming", "AI Kill Traps", "Shadow Injection"]', 0, 'WidowByte builds kill-signal traps and execution malware that remain invisible until the target is already compromised.'),
+('op_nullbyte', 'NullByte', 'Self-Evolving Extortion Engineer', '["Self-Evolving Ransomware", "Data Hostage Protocols", "AI Encryption Loops", "System Lockdown Triggers"]', 0, 'NullByte engineers adaptive ransomware ecosystems that hold systems, data, and institutions hostage at scale.');
 
--- Verify 25 ops seeded
+-- Verify 24 ops seeded
 SELECT COUNT(*) FROM operators;
