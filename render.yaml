@@ -19,8 +19,8 @@ services:
     type: web
     runtime: docker
     plan: free
-    dockerfilePath: ./springboot/Dockerfile
-    dockerContext: ./springboot
+    dockerfilePath: ./Dockerfile.render
+    dockerContext: .
     healthCheckPath: /health
     envVars:
       - key: SPRING_PROFILES_ACTIVE
@@ -28,7 +28,7 @@ services:
       - key: DB_HOST
         value: mysql-205bd3e9-shadownet-nexus.c.aivencloud.com
       - key: DB_PORT
-        value: "17380"
+        value: "12556"
       - key: DB_NAME
         value: defaultdb
       - key: DB_USERNAME
