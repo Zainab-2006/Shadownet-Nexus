@@ -15,7 +15,6 @@ public class UserOperator {
     @Id
     private String operatorId;
 
-    @JdbcTypeCode(SqlTypes.TINYINT)
     @Column(nullable = false, columnDefinition = "TINYINT DEFAULT 0")
     private Boolean selected = false;
 

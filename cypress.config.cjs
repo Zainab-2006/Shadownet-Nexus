@@ -1,8 +1,7 @@
-const { defineConfig } = require('cypress');
-
-module.exports = defineConfig({
+/** @type {Cypress.ConfigOptions} */
+module.exports = {
   e2e: {
-    baseUrl: 'http://localhost:8080',
+    baseUrl: 'http://localhost:5173',
     supportFile: 'cypress/support/e2e.ts',
     specPattern: 'cypress/e2e/**/*.cy.{js,jsx,ts,tsx}',
     viewportWidth: 1280,
@@ -13,4 +12,4 @@ module.exports = defineConfig({
       // Cypress plugins can be registered here.
     },
   },
-});
+};

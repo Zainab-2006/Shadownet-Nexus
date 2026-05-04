@@ -1,4 +1,4 @@
-﻿import { forwardRef, useState, useMemo, useEffect, useCallback } from 'react';
+import { forwardRef, useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import RecommendedSection from '@/components/RecommendedSection';
 
 import { Search, Flag, CheckCircle2, Clock, Users, Trophy, X, Send, AlertCircle, ChevronDown } from 'lucide-react';
@@ -34,6 +34,14 @@ const difficultyColors: Record<string, string> = {
   medium: 'text-warning',
   hard: 'text-destructive',
   insane: 'text-secondary',
+};
+
+const teachingAnswers: Record<string, string> = {
+  'crypto-001': 'flag{caesar}',
+  'web-001': 'flag{portscan}',
+  'forensic-001': 'flag{httppost}',
+  'osint-001': 'flag{profileemail}',
+  // Add more as needed
 };
 
 type SoloAttemptMode = 'ranked' | 'teaching' | 'coaching';
@@ -116,7 +124,7 @@ const ChallengeModal = ({
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<'correct' | 'wrong' | null>(null);
   const [timeElapsed, setTimeElapsed] = useState(0);
-  const [timerId, setTimerId] = useState<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [currentStage, setCurrentStage] = useState(1);
   const [hintsUsed, setHintsUsed] = useState(0);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -169,28 +177,29 @@ const ChallengeModal = ({
   };
 
   const startTimer = useCallback(() => {
-    if (timerId) clearInterval(timerId);
-    const id = setInterval(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
       setTimeElapsed((prev) => prev + 1);
     }, 1000);
-    setTimerId(id);
-  }, [timerId]);
+  }, []);
 
-  const stopTimer = () => {
-    if (timerId) {
-      clearInterval(timerId);
-      setTimerId(null);
+  const stopTimer = useCallback(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (session && !sessionLoading) {
       setSessionId(session.id);
       setCurrentStage(session.currentStage);
       setHintsUsed(session.hintsUsed);
-      if (!timerId) startTimer();
+      if (!timerRef.current) startTimer();
     }
-  }, [session, sessionLoading, startTimer, timerId]);
+  }, [session, sessionLoading, startTimer]);
+
+  useEffect(() => stopTimer, [stopTimer]);
 
   const handleRevealAnswer = () => {
     setTrainingMode(true);
@@ -366,7 +375,7 @@ const ChallengeModal = ({
                             </p>
                             {solutionRevealed && (
                               <p className="mt-2 font-mono text-primary">
-                                Answer path: No plaintext answer is exposed by the challenge payload. Follow the concept path above and request hints.
+                                Answer path: {teachingAnswers[challenge.id] || 'No plaintext answer is exposed by the challenge payload. Follow the concept path above and request hints.'}
                               </p>
                             )}
                           </div>

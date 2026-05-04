@@ -8,7 +8,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "user_events", indexes = {
-        @Index(name = "idx_user_events_user_time", columnList = "user_id,created_at DESC"),
+        @Index(name = "idx_user_events_user_time", columnList = "user_id,created_at"),
         @Index(name = "idx_user_events_type", columnList = "event_type"),
         @Index(name = "idx_user_events_user_category", columnList = "user_id,category")
 })
@@ -16,7 +16,6 @@ public class UserEvent {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(columnDefinition = "UUID DEFAULT gen_random_uuid()")
     private String id;
 
     @Column(name = "user_id", nullable = false)
@@ -31,8 +30,8 @@ public class UserEvent {
     @Column(length = 50)
     private String category;
 
-    @Column(name = "metadata", columnDefinition = "JSONB DEFAULT '{}'")
-    private String metadataJson;
+    @Column(name = "metadata", columnDefinition = "TEXT")
+    private String metadataJson = "{}";
 
     @Column(name = "fail_count", nullable = false)
     private int failCount = 0;

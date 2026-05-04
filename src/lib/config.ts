@@ -1,4 +1,5 @@
 const DEFAULT_API_ORIGIN = 'https://shadownet-nexus-mecf.onrender.com';
+const BROWSER_ORIGIN = typeof window !== 'undefined' ? window.location.origin : DEFAULT_API_ORIGIN;
 
 const normalizeApiOrigin = (value?: string): string => {
   if (!value) {
@@ -16,11 +17,12 @@ const normalizeWsBase = (value?: string): string => {
   return value.replace(/\/+$/, '').replace(/\/ws$/, '');
 };
 
-const APP_BASE_URL = import.meta.env.DEV && !import.meta.env.VITE_API_BASE_URL
+const APP_BASE_URL = import.meta.env.DEV 
   ? ''
-  : normalizeApiOrigin(import.meta.env.VITE_API_BASE_URL);
+  : normalizeApiOrigin(import.meta.env.VITE_API_BASE_URL || BROWSER_ORIGIN);
 
-export const API_BASE = APP_BASE_URL ? `${APP_BASE_URL}/api` : '/api';
+export const API_BASE = '/api';
+
 export const WS_BASE = normalizeWsBase(
   import.meta.env.VITE_WS_BASE_URL || import.meta.env.VITE_WS_URL || APP_BASE_URL,
 );

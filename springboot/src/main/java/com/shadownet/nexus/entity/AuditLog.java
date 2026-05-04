@@ -23,7 +23,6 @@ public class AuditLog {
 
     private Long entityId;
 
-    @JdbcTypeCode(SqlTypes.TINYINT)
     @Column(columnDefinition = "TINYINT")
     private boolean success;
 

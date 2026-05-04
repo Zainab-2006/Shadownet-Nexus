@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useEffect } from 'react';
 import { useAudio, initGlobalAudio } from '@/hooks/useAudio';
 import type { AudioContextType } from './AudioProvider.hooks';

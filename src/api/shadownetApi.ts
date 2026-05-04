@@ -1,5 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '../lib/apiClient';
+import type { User } from './userApi';
+import { prepareMutationContext } from './queryUtils';
+import { parseJsonArray, parseJsonObject } from '@/utils/safeJson';
 
 interface BackendMission {
   id: string;
@@ -37,29 +40,6 @@ export interface MissionRuntimeState {
 
 type MissionAction = 'START' | 'UNLOCK' | 'COMPLETE' | 'RECOMMEND';
 
-const parseJsonObject = (value?: string | Record<string, unknown>) => {
-  if (!value) return {} as Record<string, unknown>;
-  if (typeof value !== 'string') return value;
-
-  try {
-    return JSON.parse(value) as Record<string, unknown>;
-  } catch {
-    return {} as Record<string, unknown>;
-  }
-};
-
-const parseJsonArray = (value?: string | string[]) => {
-  if (Array.isArray(value)) return value.flat().map(String);
-  if (!value) return [] as string[];
-
-  try {
-    const parsed = JSON.parse(value);
-    return Array.isArray(parsed) ? parsed.flat().map(String) : [];
-  } catch {
-    return [] as string[];
-  }
-};
-
 const normalizeMission = (mission: BackendMission) => {
   const meta = parseJsonObject(mission.meta);
   const difficulty = mission.difficulty || 'medium';
@@ -88,40 +68,19 @@ const normalizeMission = (mission: BackendMission) => {
   };
 };
 
-export const useLogin = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ email, password }: { email: string; password: string }) => 
-      apiFetch('/login', { method: 'POST', data: JSON.stringify({ email, password }) }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['user'] }),
-  });
-};
-
-export const useRegister = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ email, username, password }: { email: string; username: string; password: string }) => 
-      apiFetch('/register', { method: 'POST', data: JSON.stringify({ email, username, password }) }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['user'] }),
-  });
-};
-
 export const useUser = () => useQuery({
   queryKey: ['user'],
-  queryFn: () => apiFetch('/users/me'),
+  queryFn: () => apiFetch<User>('/users/me'),
 });
 
 export const useMissions = () => useQuery({
   queryKey: ['missions'],
-  queryFn: async () => {
-    const missions = await apiFetch<BackendMission[]>('/missions');
-    return missions.map(normalizeMission);
-  },
+  queryFn: () => apiFetch<BackendMission[]>('/missions').then((missions) => missions.map(normalizeMission)),
 });
 
 export const useMission = (missionId?: string) => useQuery({
   queryKey: ['mission', missionId],
-  queryFn: async () => normalizeMission(await apiFetch<BackendMission>(`/missions/${missionId}`)),
+  queryFn: () => apiFetch<BackendMission>(`/missions/${missionId}`).then(normalizeMission),
   enabled: !!missionId,
 });
 
@@ -135,167 +94,172 @@ export const useMissionRuntime = (missionId?: string) => useQuery({
 export const useStartMissionRuntime = (missionId?: string) => {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ['startMissionRuntime', missionId],
     mutationFn: () => apiFetch<MissionRuntimeState>(`/missions/${missionId}/runtime/start`, { method: 'POST' }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['missionRuntime', missionId] });
-      queryClient.invalidateQueries({ queryKey: ['missions'] });
-      queryClient.invalidateQueries({ queryKey: ['missionProgress'] });
-    },
+    onMutate: () => prepareMutationContext(queryClient, ['startMissionRuntime', missionId], 'startMissionRuntime'),
   });
 };
 
 export const useUpdateMissionObjective = (missionId?: string) => {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ['updateMissionObjective', missionId],
     mutationFn: ({ objectiveId, complete }: { objectiveId: string; complete: boolean }) =>
       apiFetch<MissionRuntimeState>(`/missions/${missionId}/runtime/objective`, {
         method: 'POST',
         data: JSON.stringify({ objectiveId, complete }),
       }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['missionRuntime', missionId] }),
+    onMutate: () => prepareMutationContext(queryClient, ['updateMissionObjective', missionId], 'updateMissionObjective'),
   });
 };
 
 export const useCompleteMissionRuntime = (missionId?: string) => {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ['completeMissionRuntime', missionId],
     mutationFn: () => apiFetch<MissionRuntimeState>(`/missions/${missionId}/runtime/complete`, { method: 'POST' }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['missionRuntime', missionId] });
-      queryClient.invalidateQueries({ queryKey: ['mission', missionId] });
-      queryClient.invalidateQueries({ queryKey: ['missions'] });
-      queryClient.invalidateQueries({ queryKey: ['missionProgress'] });
-      queryClient.invalidateQueries({ queryKey: ['userProgress'] });
-      queryClient.invalidateQueries({ queryKey: ['leaderboard'] });
-    },
+    onMutate: () => prepareMutationContext(queryClient, ['completeMissionRuntime', missionId], 'completeMissionRuntime'),
   });
 };
 
 export const useApplyMissionAction = (missionId?: string) => {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ['applyMissionAction', missionId],
     mutationFn: (action: MissionAction) =>
       apiFetch(`/missions/${missionId}/action`, {
         method: 'POST',
         data: JSON.stringify({ action }),
       }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['mission', missionId] });
-      queryClient.invalidateQueries({ queryKey: ['missions'] });
-      queryClient.invalidateQueries({ queryKey: ['missionProgress'] });
-    },
+    onMutate: () => prepareMutationContext(queryClient, ['applyMissionAction', missionId], 'applyMissionAction'),
   });
 };
 
-export const useCreateMissionSession = () => {
-  return useMutation({
-    mutationFn: async () => {
-      throw new Error('Standalone mission sessions are retired. Use backend-authored team creation or mission runtime endpoints.');
-    },
-  });
+interface TeamSessionView {
+  sessionId?: string;
+  teamId?: string;
+  missionId?: string;
+  phase?: string;
+  status?: string;
+  evidenceCount?: number;
+  evidence?: unknown[];
+  trust?: Record<string, number>;
+  accusation?: string;
+  activity?: unknown[];
+  accusationUnlocked?: boolean;
+  accusationResult?: unknown;
+}
+
+const mapPhase = (status: string): string => {
+  switch (status) {
+    case "ACCUSATION_RESOLVED":
+    case "ACCUSATION_UNLOCKED":
+      return 'accusation';
+    case "active":
+      return 'active';
+    default:
+      return 'lobby';
+  }
 };
 
 export const useTeamSession = (teamId: string) => useQuery({
   queryKey: ['teamSession', teamId],
-  queryFn: async () => {
-    const view = await apiFetch(`/team/${teamId}`);
-    const enrichedMembers = await apiFetch(`/team/${teamId}/members-enriched`);
-    return {
-      sessionId: view.sessionId || view.teamId || teamId,
-      missionId: view.missionId,
-      players: enrichedMembers, // Full DTOs w/ name/portrait/role/connected
-      phase: view.phase || (function mapPhase(status) {
-        switch (status) {
-          case "ACCUSATION_RESOLVED":
-          case "ACCUSATION_UNLOCKED":
-            return 'accusation';
-          case "active":
-            return 'active';
-          default:
-            return 'lobby';
-        }
-      })(view.status),
-      evidenceCount: view.evidenceCount,
-      evidence: view.evidence,
-      trust: view.trust,
-      accusation: view.accusation,
-      activity: view.activity || [],
-      accusationUnlocked: view.accusationUnlocked,
-      accusationResult: view.accusationResult,
-    };
-  },
+  queryFn: () =>
+    Promise.all([
+      apiFetch<TeamSessionView>(`/team/${teamId}`),
+      apiFetch(`/team/${teamId}/members-enriched`),
+    ]).then(([view, enrichedMembers]) => {
+      return {
+        sessionId: view.sessionId || view.teamId || teamId,
+        missionId: view.missionId,
+        players: enrichedMembers, // Full DTOs w/ name/portrait/role/connected
+        phase: view.phase || mapPhase(view.status),
+        evidenceCount: view.evidenceCount,
+        evidence: view.evidence,
+        trust: view.trust,
+        accusation: view.accusation,
+        activity: view.activity || [],
+        accusationUnlocked: view.accusationUnlocked,
+        accusationResult: view.accusationResult,
+      };
+    }),
   enabled: !!teamId,
 });
 
 export const useCreateTeam = () => {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ['createTeam'],
     mutationFn: (missionId?: string) =>
       apiFetch<unknown>('/team/create', {
         method: 'POST',
         data: JSON.stringify({ missionId }),
       }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['teamSession'] });
-      queryClient.invalidateQueries({ queryKey: ['missions'] });
-    },
+    onMutate: () => prepareMutationContext(queryClient, ['createTeam'], 'createTeam'),
   });
 };
 
 export const useJoinTeam = () => {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ['joinTeam'],
     mutationFn: (teamId: string) =>
       apiFetch<unknown>('/team/join', {
         method: 'POST',
         data: JSON.stringify({ teamId }),
       }),
-    onSuccess: (_data, teamId) => {
-      queryClient.invalidateQueries({ queryKey: ['teamSession', teamId] });
-    },
+    onMutate: (teamId) =>
+      prepareMutationContext(queryClient, ['joinTeam'], 'joinTeam').then((context) => ({
+        ...context,
+        teamId,
+      })),
   });
 };
 
 export const useAddTeamEvidence = (teamId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ['addTeamEvidence', teamId],
     mutationFn: (evidenceType: string = 'clue') =>
       apiFetch(`/team/${teamId}/evidence`, {
         method: 'POST',
         data: JSON.stringify({ evidenceType }),
       }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['teamSession', teamId] }),
+    onMutate: () => prepareMutationContext(queryClient, ['addTeamEvidence', teamId], 'addTeamEvidence'),
   });
 };
 
 export const useToggleTeamReady = (teamId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ['toggleTeamReady', teamId],
     mutationFn: (ready: boolean) =>
       apiFetch(`/team/${teamId}/ready`, {
         method: 'POST',
         data: JSON.stringify({ ready }),
       }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['teamSession', teamId] }),
+    onMutate: () => prepareMutationContext(queryClient, ['toggleTeamReady', teamId], 'toggleTeamReady'),
   });
 };
 
 export const useAccuseTeam = (teamId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ['accuseTeam', teamId],
     mutationFn: (accusedId: string) =>
       apiFetch(`/team/${teamId}/accuse`, {
         method: 'POST',
         data: JSON.stringify({ accusedId }),
       }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['teamSession', teamId] }),
+    onMutate: () => prepareMutationContext(queryClient, ['accuseTeam', teamId], 'accuseTeam'),
   });
 };
 
 export const useStartTeam = (teamId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ['startTeam', teamId],
     mutationFn: () => apiFetch(`/team/${teamId}/start`, { method: 'POST' }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['teamSession', teamId] }),
+    onMutate: () => prepareMutationContext(queryClient, ['startTeam', teamId], 'startTeam'),
   });
 };

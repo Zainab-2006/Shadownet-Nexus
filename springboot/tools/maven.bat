@@ -3,9 +3,7 @@ REM Local Maven wrapper for ShadowNet Nexus (runs backend)
 setlocal
 for %%I in ("%~dp0..\..") do set "ROOT_DIR=%%~fI"
 set "BACKEND_DIR=%ROOT_DIR%\springboot"
-set "MAVEN_HOME=%ROOT_DIR%\apache-maven-3.9.9"
 set "MAVEN_OPTS=-Dmaven.repo.local=%ROOT_DIR%\.m2\repository %MAVEN_OPTS%"
-set "PATH=%MAVEN_HOME%\bin;%PATH%"
 
 REM Local development defaults. Production must pass real env vars.
 if not defined JWT_SECRET set "JWT_SECRET=local-dev-jwt-secret-change-before-deploy-0123456789abcdef0123456789abcdef"
@@ -17,14 +15,14 @@ if not errorlevel 1 (
 )
 
 cd /d "%BACKEND_DIR%"
-mvn %*
+call "%BACKEND_DIR%\mvnw.cmd" %*
 exit /b %ERRORLEVEL%
 
 :ensure_mysql
 powershell -NoProfile -ExecutionPolicy Bypass -Command "if (Test-NetConnection 127.0.0.1 -Port 3305 -InformationLevel Quiet) { exit 0 } else { exit 1 }" >nul 2>nul
 if not errorlevel 1 (
   if not defined DATABASE_URL set "DATABASE_URL=jdbc:mysql://127.0.0.1:3305/shadownet?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true"
-  if not defined DB_USERNAME set "DB_USERNAME=shadownet"
+  if not defined DB_USERNAME set "DB_USERNAME=Shadownet"
   if not defined DB_PASSWORD set "DB_PASSWORD=root"
   echo MySQL is available on 127.0.0.1:3305; using project MySQL credentials.
   exit /b 0
@@ -56,7 +54,7 @@ for /L %%I in (1,1,30) do (
   powershell -NoProfile -ExecutionPolicy Bypass -Command "if (Test-NetConnection 127.0.0.1 -Port 3305 -InformationLevel Quiet) { exit 0 } else { exit 1 }" >nul 2>nul
   if not errorlevel 1 (
     if not defined DATABASE_URL set "DATABASE_URL=jdbc:mysql://127.0.0.1:3305/shadownet?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true"
-    if not defined DB_USERNAME set "DB_USERNAME=shadownet"
+    if not defined DB_USERNAME set "DB_USERNAME=Shadownet"
     if not defined DB_PASSWORD set "DB_PASSWORD=root"
     exit /b 0
   )

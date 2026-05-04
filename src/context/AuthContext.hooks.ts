@@ -1,10 +1,11 @@
 import { useContext } from 'react';
 import { AuthContext } from './AuthContext';
+import type { User } from '@/api/userApi';
 
 export interface AuthContextType {
   token: string | null;
-  user: unknown;
-  login: (token: string, user: unknown) => void;
+  user: User | null;
+  login: (token: string, user: User) => void;
   logout: () => void;
   isValidating: boolean;
 }

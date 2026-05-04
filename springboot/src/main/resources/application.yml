@@ -1,28 +1,31 @@
 spring:
   application:
     name: shadownet-nexus
+  config:
+    import: optional:file:./.env[.properties]
 
   datasource:
-    url: ${SPRING_DATASOURCE_URL:${DATABASE_URL:${DB_JDBC_URL:jdbc:mysql://${DB_HOST:${DATABASE_HOST:127.0.0.1}}:${DB_PORT:${DATABASE_PORT:3305}}/${DB_NAME:${DATABASE_NAME:shadownet}}?sslMode=${DB_SSL_MODE:DISABLED}&allowPublicKeyRetrieval=${DB_ALLOW_PUBLIC_KEY_RETRIEVAL:true}&serverTimezone=${DB_SERVER_TIMEZONE:UTC}&createDatabaseIfNotExist=${DB_CREATE_IF_NOT_EXIST:true}}}}
-    username: ${DB_USERNAME:${DATABASE_USER:}}
-    password: ${DB_PASSWORD:${DATABASE_PASSWORD:}}
-    driver-class-name: ${DRIVER_CLASS:com.mysql.cj.jdbc.Driver}
+    url: ${SPRING_DATASOURCE_URL:${DATABASE_URL:${DB_JDBC_URL:jdbc:mysql://127.0.0.1:3305/shadownet?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true}}}
+    username: ${DB_USERNAME:${DATABASE_USER:root}}
+    password: ${DB_PASSWORD:${DATABASE_PASSWORD:root}}
+    driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
+    open-in-view: false
     hibernate:
-      ddl-auto: validate
+      ddl-auto: none
     show-sql: false
     properties:
       hibernate:
-        dialect: ${HIBERNATE_DIALECT:org.hibernate.dialect.MySQLDialect}
         format_sql: true
   flyway:
     enabled: true
     baseline-on-migrate: true
     locations: classpath:db/migration
-    validate-on-migrate: true
+    validate-on-migrate: false
+    ignore-failed-migrations: true
   web:
     cors:
-      allowed-origins: ${CORS_ORIGINS:http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://localhost:8080,http://127.0.0.1:8080,http://localhost:8081,https://shadownet-frontend.onrender.com,https://shadownet-nexus.vercel.app,https://*.vercel.app}
+      allowed-origins: ${CORS_ORIGINS:http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174,http://localhost:5175,http://127.0.0.1:5175,http://localhost:5176,http://127.0.0.1:5176,http://localhost:3000,http://localhost:8080,http://127.0.0.1:8080,http://localhost:8081,https://shadownet-frontend.onrender.com,https://shadownet-nexus.vercel.app}
       allowed-methods: GET,POST,PUT,DELETE,OPTIONS
       allowed-headers: "*"
       allow-credentials: true
@@ -32,9 +35,16 @@ jwt:
   secret: ${JWT_SECRET:}
   expiration: ${JWT_EXPIRATION:86400000}
 
+app:
+  security:
+    require-ssl: ${REQUIRE_SSL:false}
+    require-email-verification: ${REQUIRE_EMAIL_VERIFICATION:false}
+    email-encryption-key: ${EMAIL_ENCRYPTION_KEY:}
+
 server:
   port: ${PORT:3001}
   address: 0.0.0.0
+  forward-headers-strategy: framework
   servlet:
     context-path: /
     session:
@@ -77,6 +87,7 @@ spring:
     url: ${SPRING_DATASOURCE_URL:${DATABASE_URL:${DB_JDBC_URL:jdbc:mysql://${DB_HOST:${DATABASE_HOST:127.0.0.1}}:${DB_PORT:${DATABASE_PORT:3306}}/${DB_NAME:${DATABASE_NAME:shadownet}}?sslMode=${DB_SSL_MODE:DISABLED}&allowPublicKeyRetrieval=${DB_ALLOW_PUBLIC_KEY_RETRIEVAL:true}&serverTimezone=${DB_SERVER_TIMEZONE:UTC}&createDatabaseIfNotExist=${DB_CREATE_IF_NOT_EXIST:true}}}}
     username: ${DB_USERNAME:${DATABASE_USER:}}
     password: ${DB_PASSWORD:${DATABASE_PASSWORD:}}
+    driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       initialization-fail-timeout: 0
       connection-timeout: 60000
@@ -115,16 +126,60 @@ server:
       cookie:
         secure: true
 
+app:
+  security:
+    require-ssl: true
+    require-email-verification: true
+
 ---
 spring:
   config:
     activate:
       on-profile: local
   datasource:
-    url: jdbc:mysql://127.0.0.1:3306/shadownet?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    url: jdbc:mysql://127.0.0.1:3305/shadownet?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     username: shadownet
-    password: ${DB_PASSWORD:root} 
+    password: ${DB_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
-      dialect: org.hibernate.dialect.MySQLDialect
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+  datasource:
+    url: jdbc:mysql://${DB_HOST:db}:${DB_PORT:3306}/${DB_NAME:shadownet}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
+    username: ${DB_USERNAME:Shadownet}
+    password: ${DB_PASSWORD:root}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      initialization-fail-timeout: 0
+      connection-timeout: 60000
+      validation-timeout: 5000
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: ${HIBERNATE_DIALECT:org.hibernate.dialect.MySQLDialect}
+  flyway:
+    enabled: true
+    connect-retries: 60
+    connect-retries-interval: 5s
+
+server:
+  servlet:
+    session:
+      cookie:
+        secure: false
+
+app:
+  security:
+    require-ssl: false
+    require-email-verification: false

@@ -43,7 +43,8 @@ export const useUserProgress = () => {
     queryFn: async () => {
       try {
         return await apiFetch<UserProgression>('/users/me/progress');
-      } catch {
+      } catch (error) {
+        console.error('Failed to fetch user progress:', error);
         const user = await apiFetch<User>('/users/me');
         return toUserProgression(user);
       }
@@ -56,13 +57,14 @@ export const useUserProgress = () => {
 export const useUserProfile = () => {
   return useQuery<User>({
     queryKey: ['userProfile'],
-    queryFn: () => apiFetch('/users/me'),
+    queryFn: () => apiFetch<User>('/users/me'),
     staleTime: 60 * 1000,
     enabled: !!localStorage.getItem('token'),
   });
 };
 
-export const refreshUserProgress = (queryClient: unknown): void => {
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-(queryClient as any).invalidateQueries({ queryKey: ['userProgress'] });
+import { QueryClient } from '@tanstack/react-query';
+
+export const refreshUserProgress = (queryClient: QueryClient): void => {
+  queryClient.invalidateQueries({ queryKey: ['userProgress'] });
 };

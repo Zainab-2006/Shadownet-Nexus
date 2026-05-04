@@ -2,10 +2,10 @@
 -- Adds backend-backed multiple endings support aligned with the current schema.
 
 ALTER TABLE story_chapters
-  ADD COLUMN IF NOT EXISTS ending_key VARCHAR(40) NULL;
+  ADD COLUMN ending_key VARCHAR(40) NULL;
 
 ALTER TABLE story_progress
-  ADD COLUMN IF NOT EXISTS ending_achieved VARCHAR(40) NULL;
+  ADD COLUMN ending_achieved VARCHAR(40) NULL;
 
 CREATE TABLE IF NOT EXISTS story_ending_definitions (
     id BIGINT NOT NULL AUTO_INCREMENT,

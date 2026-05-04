@@ -1,8 +1,8 @@
-import { defineConfig } from "vitest/config";
+import type { UserConfig } from "vitest/config";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 
-export default defineConfig({
+export default {
   plugins: [react()],
   test: {
     environment: "jsdom",
@@ -13,4 +13,4 @@ export default defineConfig({
   resolve: {
     alias: { "@": path.resolve(__dirname, "./src") },
   },
-});
+} satisfies UserConfig;

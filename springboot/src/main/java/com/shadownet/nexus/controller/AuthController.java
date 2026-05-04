@@ -52,10 +52,10 @@ public class AuthController {
                                 "Too many registration attempts. Please try again later.", 429));
             }
 
-            String token = authService.register(request.getEmail(), request.getUsername(), request.getPassword(),
+            User user = authService.register(request.getEmail(), request.getUsername(), request.getPassword(),
                     ipAddress);
             logger.info("User registered successfully from IP: {}", ipAddress);
-            return ResponseEntity.status(HttpStatus.CREATED).body(buildAuthResponse(token));
+            return ResponseEntity.status(HttpStatus.CREATED).body(buildRegistrationResponse(user));
         } catch (SecurityException e) {
             logger.error("Security violation in registration: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -191,6 +191,18 @@ public class AuthController {
             logger.warn("Unable to enrich auth response: {}", e.getMessage());
         }
 
+        return response;
+    }
+
+    private AuthResponse buildRegistrationResponse(User user) {
+        if (!authService.isEmailVerificationRequired()) {
+            return buildAuthResponse(jwtUtil.generateToken(user.getId()));
+        }
+
+        AuthResponse response = new AuthResponse();
+        response.setUser(new AuthResponse.AuthUser(user.getId(), user.getUsername(), user.getDisplayName()));
+        response.setRequiresEmailVerification(true);
+        response.setMessage("Registration successful. Verify your email before logging in.");
         return response;
     }
 

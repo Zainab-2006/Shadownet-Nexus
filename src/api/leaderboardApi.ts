@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/apiClient';
 
-interface LeaderboardEntry {
+export interface LeaderboardEntry {
   id: string;
   displayName: string;
   score: number;
@@ -22,7 +22,7 @@ export const useLeaderboard = () => {
   return useQuery<LeaderboardEntry[]>({
     queryKey: ['leaderboard'],
     queryFn: async () => {
-      const data = await apiFetch('/leaderboard');
+      const data = await apiFetch<LeaderboardEntry[]>('/leaderboard');
       return data.map((entry: LeaderboardEntry) => ({
         ...entry,
         tier: computeTier(entry.score)
@@ -31,4 +31,3 @@ export const useLeaderboard = () => {
     staleTime: 5 * 60 * 1000,
   });
 };
-

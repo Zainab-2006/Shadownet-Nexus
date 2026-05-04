@@ -9,23 +9,37 @@ import ParticleBackground from '@/components/layout/ParticleBackground';
 
 const Story = () => {
   const navigate = useNavigate();
-  const { selectedOperator } = useGame();
-  const { token } = useAuthentication();
+  const { selectedOperator, isInitializing, isLoading, gameState } = useGame();
+  const { token, isValidating } = useAuthentication();
+  const hasStoredToken = Boolean(token || localStorage.getItem('token'));
 
   useEffect(() => {
-    if (!token) {
-      navigate('/register');
+    if (isValidating || isInitializing || isLoading) {
       return;
     }
 
-    if (!selectedOperator) {
+    if (!hasStoredToken) {
+      navigate('/login', { replace: true });
+      return;
+    }
+
+    const operatorId = selectedOperator?.id || gameState.selectedOperator;
+
+    if (!operatorId) {
       navigate('/operators');
       return;
     }
 
-    // Redirect to operator-specific Story route
-    navigate(`/story/operator/${selectedOperator.id}`);
-  }, [navigate, token, selectedOperator]);
+    navigate(`/story/operator/${operatorId}`, { replace: true });
+  }, [
+    gameState.selectedOperator,
+    hasStoredToken,
+    isInitializing,
+    isLoading,
+    isValidating,
+    navigate,
+    selectedOperator?.id,
+  ]);
 
   return (
     <PageTransition>
@@ -42,4 +56,3 @@ const Story = () => {
 };
 
 export default Story;
-

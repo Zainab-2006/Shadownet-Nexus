@@ -57,11 +57,9 @@ public class User {
 
     private Long updatedAt;
 
-    @JdbcTypeCode(SqlTypes.TINYINT)
     @Column(nullable = false, columnDefinition = "TINYINT DEFAULT 0")
     private Boolean emailVerified = false;
 
-    @JdbcTypeCode(SqlTypes.TINYINT)
     @Column(nullable = false, columnDefinition = "TINYINT DEFAULT 0")
     private Boolean accountLocked = false;
 

@@ -121,5 +121,4 @@ export {
   CyberCardTitle,
   CyberCardDescription,
   CyberCardContent,
-  cyberCardVariants,
 };

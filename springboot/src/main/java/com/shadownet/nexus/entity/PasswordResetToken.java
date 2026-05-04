@@ -31,7 +31,6 @@ public class PasswordResetToken {
     @Column(nullable = false)
     private Long createdAt;
 
-    @JdbcTypeCode(SqlTypes.TINYINT)
     @Column(nullable = false, columnDefinition = "TINYINT")
     private Boolean used = false; // Token can only be used once
 

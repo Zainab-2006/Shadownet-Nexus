@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS `story_chapters` (
   `chapter_number` int NOT NULL,
   `title` varchar(255) NOT NULL,
   `description` TEXT,
-  `is_locked` bit(1) NOT NULL DEFAULT b'1',
+  `is_locked` bit(1) NOT NULL DEFAULT 1,
   `required_trust_level` int NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_chapter_number` (`chapter_number`)

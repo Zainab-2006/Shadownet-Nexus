@@ -4,8 +4,9 @@ Narrative cybersecurity training / CTF platform with a React frontend and Spring
 
 ## Verified Runtime
 
-- Frontend: Vite/React on `http://localhost:5173` in Docker Compose.
-- Backend: Spring Boot on `http://localhost:3001`
+- Docker frontend: `http://localhost:5174`
+- Docker backend: `http://localhost:3002`
+- Local dev frontend/backend: `http://localhost:5173` and `http://localhost:3001`
 - Database: MySQL, using Docker Compose on `127.0.0.1:3305` or native MySQL fallback on `127.0.0.1:3306`
 - Maven helper: `tools\maven.bat`
 
@@ -16,14 +17,14 @@ cd C:\Users\zain\Downloads\shadownet-nexus
 docker compose up -d --build
 ```
 
-Open `http://localhost:5173`.
+Open `http://localhost:5174`.
 
 Useful checks:
 
 ```powershell
 docker compose ps
-Invoke-WebRequest http://localhost:3001/actuator/health
-Invoke-WebRequest http://localhost:3001/api/challenges
+Invoke-WebRequest http://localhost:3002/actuator/health
+Invoke-WebRequest http://localhost:3002/api/challenges
 ```
 
 ## Deploy On Render
@@ -64,6 +65,15 @@ cd C:\Users\zain\Downloads\shadownet-nexus\springboot
 ```
 
 The helper checks MySQL on `3305`, falls back to native MySQL on `3306`, and uses the repo-local Maven cache.
+For local startup, Spring Boot now also auto-loads `C:\Users\zain\Downloads\shadownet-nexus\.env` if present.
+
+Minimal backend `.env` example:
+
+```dotenv
+JWT_SECRET=replace-with-a-random-secret-at-least-32-bytes-long
+EMAIL_ENCRYPTION_KEY=replace-with-16plus-byte-key
+DB_PASSWORD=your-db-password
+```
 
 ## Run Frontend
 
@@ -102,11 +112,12 @@ cd springboot
 
 In this environment, Vite/Vitest and Maven tests may need to run outside the sandbox because esbuild and javac dependency-JAR access can be blocked.
 
-Fresh DB proof was run against disposable native-MySQL schema `shadownet_fresh_v19_codex`; Flyway applied through `v19`, and the packaged app booted against that schema.
+Current backend proof includes successful packaging and a clean boot against the packaged jar with Flyway applying all migrations through `v31`.
 
 ## Current Gameplay Truth
 
 - Player-facing modes are `Solo`, `Missions`, and `Story`.
+- Operators are a first-class selection and narrative entry system that feeds Story and mission identity, but they are not a separate gameplay mode from the three core player routes above.
 - `/story/operator/:id` is the canonical operator narrative route. `/operator/:id` is compatibility redirect only.
 - Mission cell/team mechanics are runtime infrastructure behind Missions, not a separate player mode.
 - Backend owns score, XP, solves, operator selection, puzzle sessions, and story progress.
@@ -117,6 +128,15 @@ Fresh DB proof was run against disposable native-MySQL schema `shadownet_fresh_v
 - `/api/puzzle/*` is the canonical solo CTF session route family.
 - Legacy `/api/puzzle-session/*` routes have been removed; use `/api/puzzle/*`.
 - Team and mission systems are backend-backed and tested at service level. Team backend lifecycle also has a live two-user REST smoke proof. Browser-level multi-user WebSocket/Cypress validation remains the remaining proof gap.
+
+## Viva-Safe Summary
+
+- `Shadownet Nexus` is a cyberpunk-themed cybersecurity learning platform built around three core learning routes: `Solo`, `Missions`, and `Story`.
+- The frontend uses `React`, `TypeScript`, `Vite`, `Tailwind`, `shadcn/ui`, `Axios`, and `TanStack React Query`.
+- The backend uses `Spring Boot`, `Spring Security`, `JWT`, `JPA/Hibernate`, `Flyway`, and `MySQL` for the main deployment target.
+- Local development can boot against `H2` or local/containerized `MySQL`, but the intended persistent deployment database is `MySQL`.
+- Real-time infrastructure is not just "ready"; the repo already includes `WebSocket/STOMP` and `SockJS` support for team and runtime updates.
+- The main browser routes are `/`, `/operators`, `/solo`, `/missions`, `/story`, `/leaderboard`, `/login`, and `/register`, with canonical story progression under `/story/operator/:id`.
 
 ## Repository Scope
 

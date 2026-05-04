@@ -212,6 +212,9 @@ export const TrustNetwork: React.FC<TrustNetworkProps> = ({
             portraitUrl: '',
             fullImageUrl: '',
             bio: '',
+            unlockCost: 0,
+            unlocked: true,
+            selected: false,
             stats: { attack: 50, defense: 50, speed: 50, tech: 50 },
           }}
           trust={trustValue}

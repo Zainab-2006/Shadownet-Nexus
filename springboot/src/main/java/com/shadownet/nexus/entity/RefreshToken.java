@@ -20,7 +20,6 @@ public class RefreshToken {
     @Column(nullable = false)
     private Long expires;
 
-    @JdbcTypeCode(SqlTypes.TINYINT)
     @Column(nullable = false, columnDefinition = "TINYINT DEFAULT 0")
     private Boolean revoked = false;
 

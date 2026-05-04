@@ -1,9 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
 
-interface AudioContextWithOld extends AudioContext {
-  [key: string]: unknown;
-}
-
 type SoundType = 
   | 'click' | 'hover' | 'success' | 'failure' | 'alert' 
   | 'unlock' | 'mission_start' | 'level_up' | 'error' | 'select';
@@ -15,7 +11,7 @@ type AudioContextType = typeof window.AudioContext;
  * No external audio files needed!
  */
 export const useAudio = () => {
-  const audioContextRef = useRef<AudioContextWithOld | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
   const masterVolumeRef = useRef(0.3);
   const isEnabledRef = useRef(true);
 

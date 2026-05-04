@@ -8,5 +8,7 @@ import org.springframework.stereotype.Repository;
 public interface EmailVerificationTokenRepository extends JpaRepository<EmailVerificationToken, String> {
     EmailVerificationToken findByTokenHash(String tokenHash);
 
-    EmailVerificationToken findByUserId(String userId);
+    EmailVerificationToken findFirstByUser_IdOrderByCreatedAtDesc(String userId);
+
+    void deleteByUser_Id(String userId);
 }

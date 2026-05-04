@@ -1,41 +1,35 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/apiClient';
 import type { AuthContextType } from './AuthContext.hooks';
+import type { User } from '@/api/userApi';
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [token, setToken] = useState<string | null>(null);
-  const [user, setUser] = useState<unknown>(null);
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'));
+  const [user, setUser] = useState<User | null>(() => {
+    const savedUser = localStorage.getItem('user');
+    if (!savedUser || savedUser === 'null' || savedUser === 'undefined') {
+      localStorage.removeItem('user');
+      return null;
+    }
+
+    try {
+      return JSON.parse(savedUser) as User;
+    } catch {
+      localStorage.removeItem('user');
+      return null;
+    }
+  });
 
   const { data: validatedUser, isLoading: validating } = useQuery({
     queryKey: ['user'],
-    queryFn: () => apiFetch('/users/me'),
+    queryFn: () => apiFetch<User>('/users/me'),
     enabled: !!token,
     retry: false,
   });
-
-  useEffect(() => {
-    const savedToken = localStorage.getItem('token');
-    if (savedToken) {
-      setToken(savedToken);
-    }
-  }, []);
-
-  useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    if (savedUser && savedUser !== 'null' && savedUser !== 'undefined') {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (e) {
-        localStorage.removeItem('user');
-        setUser(null);
-      }
-    } else {
-      localStorage.removeItem('user');
-    }
-  }, []);
 
   useEffect(() => {
     if (validatedUser !== undefined && validatedUser !== null) {
@@ -51,7 +45,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [validatedUser, token]);
 
-  const login = (newToken: string, newUser: unknown) => {
+  const login = (newToken: string, newUser: User) => {
     localStorage.setItem('token', newToken);
     localStorage.setItem('user', JSON.stringify(newUser));
     setToken(newToken);

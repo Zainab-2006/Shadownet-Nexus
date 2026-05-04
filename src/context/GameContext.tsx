@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, {
   createContext,
   useCallback,
@@ -140,8 +141,9 @@ const normalizeOperator = (raw: unknown): Operator => {
   try {
     const parsed = JSON.parse(abilitySource);
     skills = Array.isArray(parsed) ? parsed.map((value) => String(value).trim()).filter(Boolean) : [];
-  } catch {
-  skills = abilitySource
+  } catch (parseError) {
+    console.warn('Unable to parse operator abilities; falling back to legacy skill parser.', parseError);
+    skills = abilitySource
       .replace(/[\\[\\]"\\]]/g, '')
       .split(/[,|]/)
       .map((value) => value.trim())
@@ -415,10 +417,22 @@ const loadUserData = useCallback(async () => {
     try {
       const [user, progressionResponse, leaderboard, storyProgress, missionStates] = await Promise.all([
         apiFetch<User>('/users/me'),
-        apiFetch<UserProgression>('/users/me/progress').catch(() => null),
-        apiFetch<LeaderboardEntry[]>('/leaderboard').catch(() => gameState.globalLeaderboard),
-        apiFetch<StoryProgress>('/story/progress').catch(() => null),
-        apiFetch<UserMissionState[]>('/missions/progress').catch(() => [] as UserMissionState[]),
+        apiFetch<UserProgression>('/users/me/progress').catch((error) => {
+          console.warn('Unable to fetch user progression; using fallback.', error);
+          return null;
+        }),
+        apiFetch<LeaderboardEntry[]>('/leaderboard').catch((error) => {
+          console.warn('Unable to fetch leaderboard; using cached leaderboard.', error);
+          return gameState.globalLeaderboard;
+        }),
+        apiFetch<StoryProgress>('/story/progress').catch((error) => {
+          console.warn('Unable to fetch story progress; using fallback.', error);
+          return null;
+        }),
+        apiFetch<UserMissionState[]>('/missions/progress').catch((error) => {
+          console.warn('Unable to fetch mission progress; using empty mission state.', error);
+          return [] as UserMissionState[];
+        }),
       ]);
       const progression = progressionResponse ?? buildProgression(user);
 

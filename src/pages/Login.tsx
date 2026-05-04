@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Shield, Mail, Lock, ChevronRight, AlertCircle } from 'lucide-react';
 import { CyberButton } from '@/components/ui/cyber-button';
@@ -8,14 +8,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import ParticleBackground from '@/components/layout/ParticleBackground';
 import PageTransition from '@/components/layout/PageTransition';
-import { useLogin, useUser } from '@/api/shadownetApi';
+import { useLogin } from '@/api/authApi';
 import { useAuthentication } from '@/context/AuthContext.hooks';
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError] = useState(() => String(location.state?.message || ''));
   const loginMutation = useLogin();
   const { login } = useAuthentication();
 
@@ -35,9 +36,11 @@ const Login = () => {
       // Unified token/user contract
       login(result.token, result.user);
       navigate('/operators');
-  } catch (err: unknown) {
-      const message = err?.response?.data?.message || err?.response?.data?.error || err?.message || 'Login failed';
-      setError(message);
+    } catch (err: unknown) {
+      const axiosError = typeof err === 'object' && err !== null && 'response' in err ? err as { response?: { data?: Record<string, unknown> } } : null;
+      const message = axiosError?.response?.data?.message || axiosError?.response?.data?.error ||
+        (err instanceof Error ? err.message : 'Login failed');
+      setError(String(message));
     }
   };
 
@@ -131,6 +134,4 @@ const Login = () => {
 };
 
 export default Login;
-
-
 

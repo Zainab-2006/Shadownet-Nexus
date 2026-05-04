@@ -217,7 +217,8 @@ const OperatorsPage = () => {
   const [selectedCharacterId, setSelectedCharacterId] = useState('');
   const [isPending, setIsPending] = useState(false);
 
-  const backendRoster = useMemo(() => backendOperators.map(operatorToCharacter), [backendOperators]);
+const backendRoster = useMemo(() => backendOperators.length > 0 ? backendOperators.map(operatorToCharacter) : roster, [backendOperators]);
+
   const backendHeroes = useMemo(() => backendRoster.filter((character) => character.faction === 'hero'), [backendRoster]);
   const backendVillains = useMemo(() => backendRoster.filter((character) => character.faction === 'villain'), [backendRoster]);
   const visibleRoster = activeTab === 'heroes' ? backendHeroes : activeTab === 'villains' ? backendVillains : backendRoster;

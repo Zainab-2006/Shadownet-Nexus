@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import ParticleBackground from '@/components/layout/ParticleBackground';
 import PageTransition from '@/components/layout/PageTransition';
-import { useRegister } from '@/api/shadownetApi';
+import { useRegister } from '@/api/authApi';
 import { useAuthentication } from '@/context/AuthContext.hooks';
 import { useNarrator } from '@/context/NarratorContext';
 
@@ -71,9 +71,18 @@ const handleOpenOnboarding = useCallback(() => {
         email: normalizedEmail,
         password
       });
-      login(result.token, result.user);
-      handleOpenOnboarding();
-      navigate('/operators');
+      if (result?.token && result?.user) {
+        login(result.token, result.user);
+        handleOpenOnboarding();
+        navigate('/operators');
+        return;
+      }
+
+      navigate('/login', {
+        state: {
+          message: result?.message || 'Registration successful. Verify your email before logging in.',
+        },
+      });
     } catch (err: unknown) {
       const message = err?.response?.data?.message || err?.response?.data?.error || err?.message || 'Registration failed';
       setError(message);
@@ -231,5 +240,3 @@ const handleOpenOnboarding = useCallback(() => {
 };
 
 export default Register;
-
-

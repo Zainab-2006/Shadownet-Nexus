@@ -50,8 +50,12 @@ services:
       - key: JWT_EXPIRATION
         value: "86400000"
       - key: CORS_ORIGINS
-        value: http://localhost:5173,http://localhost:3000,http://localhost:8080,http://localhost:8081,https://shadownet-frontend.onrender.com,https://shadownet-nexus.vercel.app,https://*.vercel.app
+        value: http://localhost:5173,http://localhost:3000,http://localhost:8080,http://localhost:8081,https://shadownet-frontend.onrender.com,https://shadownet-nexus.vercel.app
       - key: SECURE_COOKIES
+        value: "true"
+      - key: REQUIRE_SSL
+        value: "true"
+      - key: REQUIRE_EMAIL_VERIFICATION
         value: "true"
       - key: SWAGGER_ENABLED
         value: "false"

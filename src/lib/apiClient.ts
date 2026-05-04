@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { API_BASE } from './config';
 
 const normalizeApiPath = (url: string): string => {
@@ -21,25 +21,27 @@ const isPublicAuthPath = (url?: string): boolean => {
     || normalized === '/verify-email';
 };
 
-const toAxiosConfig = (url: string, config?: AxiosRequestConfig): AxiosRequestConfig => {
+type RequestConfigWithBody = AxiosRequestConfig & { body?: unknown };
+
+const toAxiosConfig = (url: string, config?: RequestConfigWithBody): AxiosRequestConfig => {
   const nextConfig: AxiosRequestConfig = {
     ...config,
     url: normalizeApiPath(url),
   };
 
-  if ('body' in (config || {}) && config.body !== undefined && typeof nextConfig.data === 'undefined') {
+  if ('body' in (config || {}) && config?.body !== undefined && typeof nextConfig.data === 'undefined') {
     const rawBody = config.body as unknown;
     if (typeof rawBody === 'string') {
       try {
         nextConfig.data = JSON.parse(rawBody);
-      } catch {
+      } catch (e) {
         nextConfig.data = rawBody;
       }
     } else {
       nextConfig.data = rawBody;
     }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-delete (nextConfig as any).body;
+    const configWithBody = nextConfig as AxiosRequestConfig & { body?: unknown };
+    delete configWithBody.body;
   }
 
   return nextConfig;
@@ -58,13 +60,12 @@ class ApiClient {
     });
 
     this.client.interceptors.request.use(
-(config: AxiosRequestConfig<unknown>) => {
+      (config: InternalAxiosRequestConfig) => {
         const token = localStorage.getItem('token');
         if (token && !isPublicAuthPath(config.url)) {
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-config.headers = { ...(config.headers || {}), Authorization: `Bearer ${token}` } as any;
+          config.headers.set('Authorization', `Bearer ${token}`);
         }
-return config as AxiosRequestConfig;
+        return config;
       },
       (error: AxiosError) => Promise.reject(error),
     );
@@ -89,23 +90,23 @@ return config as AxiosRequestConfig;
     );
   }
 
-  request<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<unknown>> {
+  request<T = unknown>(url: string, config?: RequestConfigWithBody): Promise<AxiosResponse<T>> {
     return this.client.request<T>(toAxiosConfig(url, config));
   }
 
-  get<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<unknown>> {
+  get<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
     return this.client.get<T>(normalizeApiPath(url), config);
   }
 
-  post<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<AxiosResponse<unknown>> {
+  post<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
     return this.client.post<T>(normalizeApiPath(url), data, config);
   }
 
-  put<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<AxiosResponse<unknown>> {
+  put<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
     return this.client.put<T>(normalizeApiPath(url), data, config);
   }
 
-  delete<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<unknown>> {
+  delete<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
     return this.client.delete<T>(normalizeApiPath(url), config);
   }
 }
@@ -116,7 +117,7 @@ export const apiPost = <T = unknown>(url: string, data?: unknown, config?: Axios
 export const apiPut = <T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => apiClient.put<T>(url, data, config);
 export const apiDelete = <T = unknown>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => apiClient.delete<T>(url, config);
 
-export const apiFetch = async <T = unknown>(url: string, config?: AxiosRequestConfig): Promise<T> => {
+export const apiFetch = async <T = unknown>(url: string, config?: RequestConfigWithBody): Promise<T> => {
   const response = await apiClient.request<T>(url, config);
   return response.data;
 };

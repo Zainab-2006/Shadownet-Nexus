@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -41,6 +42,9 @@ public class SecurityConfig {
     @Value("${spring.web.cors.allowed-origins:http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://localhost:8080,http://127.0.0.1:8080,http://localhost:8081,https://shadownet-frontend.onrender.com,https://shadownet-nexus.vercel.app}")
     private String allowedOrigins;
 
+    @Value("${app.security.require-ssl:false}")
+    private boolean requireSsl;
+
     private static final Map<String, Bucket> rateLimitingBuckets = new ConcurrentHashMap<>();
 
     public static Bucket getRateLimitingBucket(String key) {
@@ -60,6 +64,20 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .requiresChannel(channel -> {
+                    if (requireSsl) {
+                        channel.anyRequest().requiresSecure();
+                    }
+                })
+                .headers(headers -> headers
+                        .httpStrictTransportSecurity(hsts -> hsts.includeSubDomains(true).maxAgeInSeconds(31536000))
+                        .frameOptions(frameOptions -> frameOptions.deny())
+                        .referrerPolicy(referrer -> referrer.policy(
+                                org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER))
+                        .contentSecurityPolicy(csp -> csp.policyDirectives(
+                                "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"))
+                        .permissionsPolicy(permissions -> permissions.policy(
+                                "camera=(), geolocation=(), microphone=(), payment=(), usb=()")))
                 .sessionManagement(smg -> smg.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers(
@@ -85,6 +103,11 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().authenticated())
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint((request, response, authException) -> response.sendError(
+                                HttpStatus.UNAUTHORIZED.value(), "Authentication required"))
+                        .accessDeniedHandler((request, response, accessDeniedException) -> response.sendError(
+                                HttpStatus.FORBIDDEN.value(), "Access denied")))
                 .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -105,7 +128,9 @@ public class SecurityConfig {
                 .toList());
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(Arrays.asList("*"));
+        config.setExposedHeaders(Arrays.asList("Retry-After"));
         config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;

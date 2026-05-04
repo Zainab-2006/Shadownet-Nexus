@@ -16,11 +16,52 @@ CREATE TABLE IF NOT EXISTS missions (
 
 -- V1 created missions with a narrower JSON contract. Align it before seeding runtime data.
 ALTER TABLE missions
-  MODIFY COLUMN story TEXT NULL,
-  MODIFY COLUMN meta TEXT NULL,
-  ADD COLUMN objectives JSON NULL,
-  ADD COLUMN time_limit_seconds INT DEFAULT 3600,
-  ADD COLUMN xp_reward INT DEFAULT 500;
+  MODIFY COLUMN story TEXT NULL;
+
+ALTER TABLE missions
+  MODIFY COLUMN meta TEXT NULL;
+
+SET @has_objectives = (
+  SELECT COUNT(*)
+  FROM information_schema.columns
+  WHERE table_schema = DATABASE()
+    AND table_name = 'missions'
+    AND column_name = 'objectives'
+);
+SET @sql = IF(@has_objectives = 0,
+  'ALTER TABLE missions ADD COLUMN objectives JSON NULL',
+  'SELECT 1');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @has_time_limit = (
+  SELECT COUNT(*)
+  FROM information_schema.columns
+  WHERE table_schema = DATABASE()
+    AND table_name = 'missions'
+    AND column_name = 'time_limit_seconds'
+);
+SET @sql = IF(@has_time_limit = 0,
+  'ALTER TABLE missions ADD COLUMN time_limit_seconds INT DEFAULT 3600',
+  'SELECT 1');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @has_xp_reward = (
+  SELECT COUNT(*)
+  FROM information_schema.columns
+  WHERE table_schema = DATABASE()
+    AND table_name = 'missions'
+    AND column_name = 'xp_reward'
+);
+SET @sql = IF(@has_xp_reward = 0,
+  'ALTER TABLE missions ADD COLUMN xp_reward INT DEFAULT 500',
+  'SELECT 1');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 CREATE TABLE IF NOT EXISTS mission_sessions (
   id VARCHAR(64) PRIMARY KEY,
@@ -35,12 +76,12 @@ CREATE TABLE IF NOT EXISTS mission_sessions (
 );
 
 INSERT IGNORE INTO missions (id, title, mission_type, difficulty, story, objectives, time_limit_seconds, xp_reward, meta, created_at) VALUES
-('mission_corp_001', 'Corporate Breach', 'corporate_espionage', 'easy', 'Story Chapter 1: Recruitment leads here.', '["Recon target", "Hack credentials", "Extract data"]', 1800, 300, '{"soloCapable":true,"teamCapable":true}', UNIX_TIMESTAMP() * 1000),
-('mission_heist_001', 'Data Heist', 'data_heist', 'medium', 'Disable alarms, coordinate access, and exfiltrate the target archive.', '["Disable alarms", "Team coordination", "Exfil data"]', 2400, 500, '{"soloCapable":true,"teamCapable":true}', UNIX_TIMESTAMP() * 1000),
-('mission_infra_001', 'Infrastructure Attack', 'infrastructure_attack', 'medium', 'Map the exposed network and prove controlled access without collateral damage.', '["Map network", "Exploit vulnerability", "Establish controlled access"]', 2700, 500, '{"soloCapable":true,"teamCapable":true}', UNIX_TIMESTAMP() * 1000),
-('mission_defense_001', 'Cyber Defense', 'cyber_warfare', 'easy', 'Detect the active breach, contain it, and document remediation steps.', '["Detect attack", "Contain breach", "Remediate host"]', 1800, 300, '{"soloCapable":true,"teamCapable":false}', UNIX_TIMESTAMP() * 1000),
-('mission_team_001', 'Team Operation', 'team', 'hard', 'Coordinate shared evidence and resolve the accusation window.', '["Coordinate intel", "Collect evidence", "Accuse leader"]', 3600, 800, '{"soloCapable":false,"teamCapable":true}', UNIX_TIMESTAMP() * 1000),
-('mission_final_001', 'ShadowNet Core', 'boss', 'extreme', 'Synthesize the prior evidence chain and neutralize the ShadowNet core.', '["Validate evidence chain", "Execute final breach", "Resolve final accusation"]', 5400, 2000, '{"soloCapable":true,"teamCapable":true}', UNIX_TIMESTAMP() * 1000);
+('mission_corp_001', 'Corporate Breach', 'corporate_espionage', 'easy', 'Story Chapter 1: Recruitment leads here.', '["Recon target", "Hack credentials", "Extract data"]', 1800, 300, '{"soloCapable":true,"teamCapable":true}', UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3)) * 1000),
+('mission_heist_001', 'Data Heist', 'data_heist', 'medium', 'Disable alarms, coordinate access, and exfiltrate the target archive.', '["Disable alarms", "Team coordination", "Exfil data"]', 2400, 500, '{"soloCapable":true,"teamCapable":true}', UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3)) * 1000),
+('mission_infra_001', 'Infrastructure Attack', 'infrastructure_attack', 'medium', 'Map the exposed network and prove controlled access without collateral damage.', '["Map network", "Exploit vulnerability", "Establish controlled access"]', 2700, 500, '{"soloCapable":true,"teamCapable":true}', UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3)) * 1000),
+('mission_defense_001', 'Cyber Defense', 'cyber_warfare', 'easy', 'Detect the active breach, contain it, and document remediation steps.', '["Detect attack", "Contain breach", "Remediate host"]', 1800, 300, '{"soloCapable":true,"teamCapable":false}', UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3)) * 1000),
+('mission_team_001', 'Team Operation', 'team', 'hard', 'Coordinate shared evidence and resolve the accusation window.', '["Coordinate intel", "Collect evidence", "Accuse leader"]', 3600, 800, '{"soloCapable":false,"teamCapable":true}', UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3)) * 1000),
+('mission_final_001', 'ShadowNet Core', 'boss', 'extreme', 'Synthesize the prior evidence chain and neutralize the ShadowNet core.', '["Validate evidence chain", "Execute final breach", "Resolve final accusation"]', 5400, 2000, '{"soloCapable":true,"teamCapable":true}', UNIX_TIMESTAMP(CURRENT_TIMESTAMP(3)) * 1000);
 
 UPDATE missions SET title = 'Corporate Breach', mission_type = 'corporate_espionage', difficulty = 'easy', story = 'Story Chapter 1: Recruitment leads here.', objectives = '["Recon target", "Hack credentials", "Extract data"]', time_limit_seconds = 1800, xp_reward = 300, meta = '{"soloCapable":true,"teamCapable":true}' WHERE id = 'mission_corp_001';
 UPDATE missions SET title = 'Data Heist', mission_type = 'data_heist', difficulty = 'medium', story = 'Disable alarms, coordinate access, and exfiltrate the target archive.', objectives = '["Disable alarms", "Team coordination", "Exfil data"]', time_limit_seconds = 2400, xp_reward = 500, meta = '{"soloCapable":true,"teamCapable":true}' WHERE id = 'mission_heist_001';

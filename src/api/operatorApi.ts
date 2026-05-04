@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch, apiPost } from '../lib/apiClient';
 
 import type { Operator } from '@/types/operator';
+import { User } from './userApi';
 import { roster } from '@/data/roster';
 
 export interface SelectOperatorRequest {
@@ -93,14 +94,15 @@ const normalizeSkills = (abilities?: string): string[] => {
     if (Array.isArray(parsed)) {
       return parsed.map((skill) => String(skill).trim()).filter(Boolean);
     }
-  } catch {
+  } catch (error) {
+    console.error('Operator abilities parse error:', error, abilities);
     // Parse error, continue with string parsing
   }
 
   return abilities
-    .replaceAll('[', '')
-    .replaceAll(']', '')
-    .replaceAll('"', '')
+    .replace(/\[/g, '')
+    .replace(/\]/g, '')
+    .replace(/"/g, '')
     .split(/[,|]/)
     .map((skill) => skill.trim())
     .filter(Boolean);
@@ -192,10 +194,10 @@ export const useSelectedOperator = () => {
   return useQuery<Operator | null>({
     queryKey: ['selectedOperator'],
     queryFn: async () => {
-      const user = await apiFetch<unknown>('/users/me');
+      const user = await apiFetch<User>('/users/me');
       if (!user.selectedOperator) return null;
       const operators = await apiFetch<BackendOperatorDto[]>('/operators');
-      return operators.map(toOperator).find((op) => op.id === user.selectedOperator) || null;
+      return operators.map(toOperator).find((op) => op.id === user.selectedOperator!) || null;
     },
     retry: false,
     enabled: !!localStorage.getItem('token'),
@@ -205,8 +207,20 @@ export const useSelectedOperator = () => {
 export const useSelectOperator = () => {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ['selectOperator'],
     mutationFn: (operatorId: string | number) => apiPost('/operators/select', { operatorId: String(operatorId) }),
-    onSuccess: () => {
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['selectOperator'] });
+      const previous = queryClient.getQueryData(['selectOperator']);
+      queryClient.setQueryData(['selectOperator'], 'pending');
+      return { previous };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previous !== undefined) {
+        queryClient.setQueryData(['selectOperator'], context.previous);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['selectedOperator'] });
       queryClient.invalidateQueries({ queryKey: ['user'] });
       queryClient.invalidateQueries({ queryKey: ['operators'] });
@@ -215,25 +229,10 @@ export const useSelectOperator = () => {
   });
 };
 
-export const useUpdateTrust = () => {
-  return useMutation({
-    mutationFn: async () => {
-      throw new Error('Client-authored trust mutation is retired. Use backend-authored consequence endpoints.');
-    },
-  });
-};
-
-export const useUpdateMissionProgress = () => {
-  return useMutation({
-    mutationFn: async () => {
-      throw new Error('Client-authored mission progress mutation is retired. Use backend-authored consequence endpoints.');
-    },
-  });
-};
-
 export const useApplyOperatorConsequence = () => {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ['applyOperatorConsequence'],
     mutationFn: ({ operatorId, missionId, choiceId, outcome, action }: OperatorConsequenceRequest) =>
       apiPost<OperatorConsequenceResponse>(`/operators/${operatorId}/consequence`, {
         missionId,
@@ -241,18 +240,21 @@ export const useApplyOperatorConsequence = () => {
         outcome,
         action,
       }).then((response) => response.data),
-    onSuccess: () => {
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['applyOperatorConsequence'] });
+      const previous = queryClient.getQueryData(['applyOperatorConsequence']);
+      queryClient.setQueryData(['applyOperatorConsequence'], 'pending');
+      return { previous };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previous !== undefined) {
+        queryClient.setQueryData(['applyOperatorConsequence'], context.previous);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['missions'] });
       queryClient.invalidateQueries({ queryKey: ['trust'] });
       queryClient.invalidateQueries({ queryKey: ['operators'] });
-    },
-  });
-};
-
-export const useAccuseOperator = () => {
-  return useMutation({
-    mutationFn: async () => {
-      throw new Error('Client-authored trust accusation is retired. Use team consequence endpoints.');
     },
   });
 };

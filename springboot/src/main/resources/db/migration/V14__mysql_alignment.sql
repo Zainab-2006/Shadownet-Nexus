@@ -1,7 +1,9 @@
 -- Align the MySQL schema with the current Spring entities.
 
 ALTER TABLE users
-  ADD COLUMN account_locked TINYINT NOT NULL DEFAULT 0,
+  ADD COLUMN account_locked TINYINT NOT NULL DEFAULT 0;
+
+ALTER TABLE users
   ADD COLUMN last_login_at BIGINT NULL;
 
 CREATE TABLE challenge_stages (
@@ -65,12 +67,24 @@ CREATE INDEX idx_user_skills_updated ON user_skills(updated_at);
 CREATE INDEX idx_user_skills_xp ON user_skills(xp);
 
 ALTER TABLE challenges
-  ADD COLUMN max_solves INT NOT NULL DEFAULT 100,
-  ADD COLUMN first_blood_user_id VARCHAR(255) NULL,
-  ADD COLUMN first_blood_at BIGINT NULL,
-  ADD COLUMN stages JSON NULL,
-  ADD COLUMN hints JSON NULL,
-  ADD COLUMN explanation TEXT NULL,
+  ADD COLUMN max_solves INT NOT NULL DEFAULT 100;
+
+ALTER TABLE challenges
+  ADD COLUMN first_blood_user_id VARCHAR(255) NULL;
+
+ALTER TABLE challenges
+  ADD COLUMN first_blood_at BIGINT NULL;
+
+ALTER TABLE challenges
+  ADD COLUMN stages JSON NULL;
+
+ALTER TABLE challenges
+  ADD COLUMN hints JSON NULL;
+
+ALTER TABLE challenges
+  ADD COLUMN explanation TEXT NULL;
+
+ALTER TABLE challenges
   ADD COLUMN docker_image VARCHAR(255) NULL;
 
 CREATE INDEX idx_challenges_max_solves ON challenges(max_solves);
@@ -131,11 +145,21 @@ CREATE INDEX idx_user_events_type ON user_events(event_type);
 CREATE INDEX idx_user_events_user_category ON user_events(user_id, category);
 
 ALTER TABLE team_sessions
-  ADD COLUMN team_id VARCHAR(64) NULL,
-  ADD COLUMN status VARCHAR(50) NOT NULL DEFAULT 'waiting',
-  ADD COLUMN traitor_id VARCHAR(64) NULL,
-  ADD COLUMN accusation_result VARCHAR(255) NULL,
-  ADD COLUMN evidence_json TEXT NULL,
+  ADD COLUMN team_id VARCHAR(64) NULL;
+
+ALTER TABLE team_sessions
+  ADD COLUMN status VARCHAR(50) NOT NULL DEFAULT 'waiting';
+
+ALTER TABLE team_sessions
+  ADD COLUMN traitor_id VARCHAR(64) NULL;
+
+ALTER TABLE team_sessions
+  ADD COLUMN accusation_result VARCHAR(255) NULL;
+
+ALTER TABLE team_sessions
+  ADD COLUMN evidence_json TEXT NULL;
+
+ALTER TABLE team_sessions
   ADD COLUMN time_started BIGINT NULL;
 
 CREATE TABLE team_members (
@@ -158,13 +182,27 @@ CREATE TABLE trust_relationship (
 );
 
 ALTER TABLE audit_logs
-  ADD COLUMN action VARCHAR(255) NULL,
-  ADD COLUMN entity_type VARCHAR(100) NULL,
-  ADD COLUMN entity_id BIGINT NULL,
-  ADD COLUMN success TINYINT NOT NULL DEFAULT 1,
-  ADD COLUMN user_agent TEXT NULL,
-  ADD COLUMN username VARCHAR(255) NULL,
-  ADD COLUMN ip_address VARCHAR(45) NULL,
+  ADD COLUMN action VARCHAR(255) NULL;
+
+ALTER TABLE audit_logs
+  ADD COLUMN entity_type VARCHAR(100) NULL;
+
+ALTER TABLE audit_logs
+  ADD COLUMN entity_id BIGINT NULL;
+
+ALTER TABLE audit_logs
+  ADD COLUMN success TINYINT NOT NULL DEFAULT 1;
+
+ALTER TABLE audit_logs
+  ADD COLUMN user_agent TEXT NULL;
+
+ALTER TABLE audit_logs
+  ADD COLUMN username VARCHAR(255) NULL;
+
+ALTER TABLE audit_logs
+  ADD COLUMN ip_address VARCHAR(45) NULL;
+
+ALTER TABLE audit_logs
   ADD COLUMN created_at DATETIME NULL;
 
 CREATE INDEX idx_audit_action ON audit_logs(action);

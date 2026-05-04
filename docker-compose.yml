@@ -3,37 +3,42 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.frontend
+      args:
+        VITE_API_BASE_URL: ""
+        VITE_WS_BASE_URL: ""
     ports:
-      - "5173:5173"
-    volumes:
-      - .:/app
-      - /app/node_modules
-    environment:
-      VITE_API_BASE_URL: http://localhost:3001
-      VITE_WS_BASE_URL: http://localhost:3001
+      - "${FRONTEND_PORT:-5174}:80"
     depends_on:
-      app:
-        condition: service_healthy
+      - backend
     networks:
       - shadownet-network
 
-  app:
+  backend:
     build: ./springboot
     ports:
-      - "3001:3001"
+      - "${BACKEND_PORT:-3002}:3001"
     environment:
-      SPRING_PROFILES_ACTIVE: prod
-      DATABASE_URL: jdbc:mysql://db:3306/shadownet?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      DB_USERNAME: shadownet
+      SPRING_PROFILES_ACTIVE: docker
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: shadownet
+      DB_USERNAME: ${DB_USERNAME:-Shadownet}
       DB_PASSWORD: ${DB_PASSWORD:-root}
-      JWT_SECRET: ${JWT_SECRET:-change-me-local-only-jwt-secret-64-characters-minimum}
-      EMAIL_ENCRYPTION_KEY: ${EMAIL_ENCRYPTION_KEY:-local-dev-email}
-      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173,http://localhost:8080,http://127.0.0.1:8080
+      DRIVER_CLASS: ${DRIVER_CLASS:-com.mysql.cj.jdbc.Driver}
+      HIBERNATE_DIALECT: ${HIBERNATE_DIALECT:-org.hibernate.dialect.MySQLDialect}
+      DB_ALLOW_PUBLIC_KEY_RETRIEVAL: true
+      DB_SERVER_TIMEZONE: UTC
+      DB_CREATE_IF_NOT_EXIST: true
+      DB_SSL_MODE: DISABLED
+      JWT_SECRET: ${JWT_SECRET}
+      EMAIL_ENCRYPTION_KEY: ${EMAIL_ENCRYPTION_KEY:-local-dev-email-key}
+      SECURE_COOKIES: ${SECURE_COOKIES:-false}
+      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174,http://localhost:8080,http://127.0.0.1:8080
     depends_on:
       db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "timeout 5 bash -c '</dev/tcp/127.0.0.1/3001' || exit 1"]
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/3001' || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 18
@@ -47,7 +52,7 @@ services:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
       MYSQL_ROOT_HOST: '%'
       MYSQL_DATABASE: shadownet
-      MYSQL_USER: shadownet
+      MYSQL_USER: ${DB_USERNAME:-Shadownet}
       MYSQL_PASSWORD: ${DB_PASSWORD:-root}
     ports:
       - "3305:3306"

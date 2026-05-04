@@ -12,37 +12,37 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class StoryScene {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chapter_id", nullable = false)
     @JsonIgnore
     private StoryChapter chapter;
-    
+
     @Column(nullable = false)
     private Integer sceneNumber;
-    
+
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
-    
+
     private String sceneType;
-    
+
     @Column(nullable = false)
     private String characterSpeaking;
-    
+
     @Column
     private String operatorPovVariants;
-    
+
     @ElementCollection
     @CollectionTable(name = "story_scene_choices", joinColumns = @JoinColumn(name = "scene_id"))
     private List<SceneChoice> choices;
-    
+
     @Column(name = "next_scene_id")
     private Long nextSceneId;
-    
+
     @Embeddable
     @Data
     @NoArgsConstructor
@@ -57,4 +57,3 @@ public class StoryScene {
         private Long nextSceneId;
     }
 }
-

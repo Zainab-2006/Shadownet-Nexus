@@ -27,7 +27,6 @@ public class EmailVerificationToken {
     @Column(nullable = false)
     private Long createdAt;
 
-    @JdbcTypeCode(SqlTypes.TINYINT)
     @Column(nullable = false, columnDefinition = "TINYINT")
     private Boolean verified = false;
 

@@ -4,6 +4,8 @@ public class AuthResponse {
 
     private String token;
     private AuthUser user;
+    private boolean requiresEmailVerification;
+    private String message;
 
     public String getToken() {
         return token;
@@ -19,6 +21,22 @@ public class AuthResponse {
 
     public void setUser(AuthUser user) {
         this.user = user;
+    }
+
+    public boolean isRequiresEmailVerification() {
+        return requiresEmailVerification;
+    }
+
+    public void setRequiresEmailVerification(boolean requiresEmailVerification) {
+        this.requiresEmailVerification = requiresEmailVerification;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 
     public static class AuthUser {

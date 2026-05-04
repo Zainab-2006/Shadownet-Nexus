@@ -130,7 +130,7 @@ export const useMakeDecisionMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: storyApi.makeDecision,
-    onSuccess: () => {
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['storyProgress'] });
       queryClient.invalidateQueries({ queryKey: ['storyScene'] });
     },

@@ -90,4 +90,4 @@ const CyberButton = React.forwardRef<HTMLButtonElement, CyberButtonProps>(
 );
 CyberButton.displayName = "CyberButton";
 
-export { CyberButton, cyberButtonVariants };
+export { CyberButton };

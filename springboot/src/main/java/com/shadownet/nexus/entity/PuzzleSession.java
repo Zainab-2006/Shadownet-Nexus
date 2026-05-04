@@ -27,7 +27,6 @@ public class PuzzleSession {
     @Column(name = "hints_used", nullable = false)
     private int hintsUsed = 0;
 
-    @JdbcTypeCode(SqlTypes.TINYINT)
     @Column(nullable = false, columnDefinition = "TINYINT")
     private boolean completed = false;
 

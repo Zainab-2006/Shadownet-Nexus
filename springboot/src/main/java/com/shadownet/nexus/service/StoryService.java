@@ -42,12 +42,14 @@ public class StoryService {
                 return convertToChapterDTO(chapter, null, null);
         }
 
+        @Transactional(readOnly = true)
         public SceneDTO getFirstScene(Long chapterId) {
                 StoryScene scene = sceneRepository.findFirstByChapter_IdOrderBySceneNumberAsc(chapterId)
                                 .orElseThrow(() -> new RuntimeException("No scenes found for chapter"));
                 return convertToSceneDTO(scene);
         }
 
+        @Transactional(readOnly = true)
         public SceneDTO getScene(Long id) {
                 StoryScene scene = sceneRepository.findById(id)
                                 .orElseThrow(() -> new RuntimeException("Scene not found"));
@@ -62,6 +64,7 @@ public class StoryService {
                 return convertToProgressDTO(progress);
         }
 
+        @Transactional(readOnly = true)
         public ChapterDebriefDTO getChapterDebrief(Long chapterId, String username) {
                 User user = resolveUser(username);
                 StoryChapter chapter = chapterRepository.findById(chapterId)
@@ -395,6 +398,16 @@ public class StoryService {
         }
 
         private SceneDTO convertToSceneDTO(StoryScene scene) {
+                List<StoryScene.SceneChoice> choices = scene.getChoices() == null
+                                ? Collections.emptyList()
+                                : scene.getChoices().stream()
+                                                .map(choice -> new StoryScene.SceneChoice(
+                                                                choice.getId(),
+                                                                choice.getText(),
+                                                                choice.getTrustImpact(),
+                                                                choice.getNextSceneId()))
+                                                .toList();
+
                 return SceneDTO.builder()
                                 .id(scene.getId())
                                 .chapterId(scene.getChapter().getId())
@@ -403,7 +416,7 @@ public class StoryService {
                                 .content(scene.getContent())
                                 .characterSpeaking(scene.getCharacterSpeaking())
                                 .operatorPovVariants(scene.getOperatorPovVariants())
-                                .choices(scene.getChoices())
+                                .choices(choices)
                                 .nextSceneId(scene.getNextSceneId())
                                 .build();
         }
