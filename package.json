@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "security-scan": "npx gitleaks detect --source . --verbose && npx trufflehog filesystem . --only-verified --fail-on-result && echo 'Secrets scan clean' || exit 1",
+    "security-scan": "node tools/security-scan.mjs",
     "test:security": "npm test && npm run security-scan",
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",

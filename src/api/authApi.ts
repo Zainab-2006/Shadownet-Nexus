@@ -36,7 +36,7 @@ const postAuth = <TResponse>(
   assertClientAuthRateLimit(action);
   return apiFetch<TResponse>(`/${action}`, {
     method: 'POST',
-    data: JSON.stringify(payload),
+    data: payload,
   });
 };
 

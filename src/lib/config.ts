@@ -21,7 +21,9 @@ const APP_BASE_URL = import.meta.env.DEV
   ? ''
   : normalizeApiOrigin(import.meta.env.VITE_API_BASE_URL || BROWSER_ORIGIN);
 
-export const API_BASE = '/api';
+export const API_BASE = import.meta.env.DEV
+  ? '/api'
+  : `${normalizeApiOrigin(import.meta.env.VITE_API_BASE_URL || BROWSER_ORIGIN)}/api`;
 
 export const WS_BASE = normalizeWsBase(
   import.meta.env.VITE_WS_BASE_URL || import.meta.env.VITE_WS_URL || APP_BASE_URL,
