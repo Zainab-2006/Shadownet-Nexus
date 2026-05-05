@@ -80,6 +80,7 @@ public class SecurityConfig {
                                 "camera=(), geolocation=(), microphone=(), payment=(), usb=()")))
                 .sessionManagement(smg -> smg.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(
                                 "/health",
                                 "/actuator/health",
@@ -102,6 +103,7 @@ public class SecurityConfig {
                                 "/api/leaderboard")
                         .permitAll()
                         .requestMatchers("/api/**").authenticated()
+                        .requestMatchers("/", "/index.html").permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint((request, response, authException) -> response.sendError(
