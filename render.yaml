@@ -26,7 +26,7 @@ services:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
       - key: DB_HOST
-        value: mysql-205bd3e9-shadownet-nexus.c.aivencloud.com
+        value: mysql-1ce50080-shadownet-nexus.l.aivencloud.com
       - key: DB_PORT
         value: "12556"
       - key: DB_NAME
@@ -40,11 +40,11 @@ services:
       - key: DB_SSL_MODE
         value: REQUIRED
       - key: DB_ALLOW_PUBLIC_KEY_RETRIEVAL
-        value: "false"
+        value: "true"
       - key: DB_SERVER_TIMEZONE
         value: UTC
       - key: DB_CREATE_IF_NOT_EXIST
-        value: "false"
+        value: "true"
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_EXPIRATION
