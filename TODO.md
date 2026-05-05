@@ -5,7 +5,7 @@ Local full-stack deployed successfully:
 - Backend: http://localhost:3002
 - DB healthy on 3305
 
-Render backend supports both paths: render.yaml points at springboot/Dockerfile, and Dockerfile.render is kept for existing Render services that still have the old Dockerfile path saved in the dashboard.
+Render backend source of truth: Dockerfile.render at repo root with Docker build context ".". The backend connects to Aiven through Render env vars in the Spring prod profile, not through docker-compose.
 
 For Render deploy: Use render.yaml, set DB_PASSWORD/EMAIL_ENCRYPTION_KEY secrets.
 
