@@ -7,14 +7,6 @@ import axios, {
 } from 'axios';
 import { API_BASE } from './config';
 
-const PUBLIC_AUTH_PATHS = new Set([
-  '/login',
-  '/register',
-  '/request-password-reset',
-  '/reset-password',
-  '/verify-email',
-]);
-
 const stripApiPrefix = (pathname: string): string => {
   if (pathname === '/api') {
     return '/';
@@ -33,42 +25,24 @@ const normalizeApiPath = (url: string): string => {
   }
 };
 
-const getNormalizedPathname = (url?: string): string | undefined => {
-  if (!url) {
-    return undefined;
-  }
-
-  try {
-    return stripApiPrefix(new URL(url, 'http://localhost').pathname);
-  } catch {
-    return stripApiPrefix(url.split('?')[0].split('#')[0]);
-  }
+type RequestConfigWithBody = AxiosRequestConfig & {
+  body?: unknown;
+  skipAuth?: boolean;
 };
 
-const isPublicAuthPath = (url?: string): boolean => {
-  const pathname = getNormalizedPathname(url);
-  return pathname ? PUBLIC_AUTH_PATHS.has(pathname) : false;
+type InternalRequestConfig = InternalAxiosRequestConfig & {
+  skipAuth?: boolean;
 };
 
-type RequestConfigWithBody = AxiosRequestConfig & { body?: unknown };
-
-const toAxiosConfig = (url: string, config?: RequestConfigWithBody): AxiosRequestConfig => {
-  const { body, ...restConfig } = config || {};
-  const nextConfig: AxiosRequestConfig = {
+const toAxiosConfig = (url: string, config: RequestConfigWithBody = {}): RequestConfigWithBody => {
+  const { body, ...restConfig } = config;
+  const nextConfig: RequestConfigWithBody = {
     ...restConfig,
     url: normalizeApiPath(url),
   };
 
   if (body !== undefined && typeof nextConfig.data === 'undefined') {
-    if (typeof body === 'string') {
-      try {
-        nextConfig.data = JSON.parse(body);
-      } catch {
-        nextConfig.data = body;
-      }
-    } else {
-      nextConfig.data = body;
-    }
+    nextConfig.data = body;
   }
 
   return nextConfig;
@@ -88,11 +62,12 @@ class ApiClient {
 
     this.client.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
+        const requestConfig = config as InternalRequestConfig;
         const token = localStorage.getItem('token');
-        if (token && !isPublicAuthPath(config.url)) {
-          config.headers.set('Authorization', `Bearer ${token}`);
+        if (token && !requestConfig.skipAuth) {
+          requestConfig.headers.set('Authorization', `Bearer ${token}`);
         }
-        return config;
+        return requestConfig;
       },
       (error: AxiosError) => Promise.reject(error),
     );
@@ -100,10 +75,9 @@ class ApiClient {
     this.client.interceptors.response.use(
       (response: AxiosResponse) => response,
       (error: AxiosError) => {
-        const requestUrl = typeof error.config?.url === 'string' ? error.config.url : undefined;
-        const authRequest = isPublicAuthPath(requestUrl);
+        const skipAuth = (error.config as RequestConfigWithBody | undefined)?.skipAuth === true;
 
-        if ((error.response?.status === 401 || error.response?.status === 403) && !authRequest) {
+        if ((error.response?.status === 401 || error.response?.status === 403) && !skipAuth) {
           localStorage.removeItem('token');
           localStorage.removeItem('user');
           localStorage.removeItem('refreshToken');
@@ -121,28 +95,13 @@ class ApiClient {
     return this.client.request<T>(toAxiosConfig(url, config));
   }
 
-  get<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
-    return this.client.get<T>(normalizeApiPath(url), config);
-  }
-
   post<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
     return this.client.post<T>(normalizeApiPath(url), data, config);
-  }
-
-  put<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
-    return this.client.put<T>(normalizeApiPath(url), data, config);
-  }
-
-  delete<T = unknown>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
-    return this.client.delete<T>(normalizeApiPath(url), config);
   }
 }
 
 export const apiClient = new ApiClient();
-export const apiGet = <T = unknown>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => apiClient.get<T>(url, config);
 export const apiPost = <T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => apiClient.post<T>(url, data, config);
-export const apiPut = <T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => apiClient.put<T>(url, data, config);
-export const apiDelete = <T = unknown>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => apiClient.delete<T>(url, config);
 
 export const apiFetch = async <T = unknown>(url: string, config?: RequestConfigWithBody): Promise<T> => {
   const response = await apiClient.request<T>(url, config);

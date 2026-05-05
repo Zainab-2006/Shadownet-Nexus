@@ -37,6 +37,7 @@ const postAuth = <TResponse>(
   return apiFetch<TResponse>(`/${action}`, {
     method: 'POST',
     data: payload,
+    skipAuth: true,
   });
 };
 
