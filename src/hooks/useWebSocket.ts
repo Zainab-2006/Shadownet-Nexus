@@ -13,7 +13,21 @@ interface WebSocketStatus {
   socket: Client | null;
 }
 
-export const useWebSocket = (props: UseWebSocketProps): WebSocketStatus => {
+const parseMessageBody = (body: string): unknown => {
+  try {
+    return JSON.parse(body);
+  } catch {
+    return body;
+  }
+};
+
+const reportRealtimeIssue = (message: string, detail?: unknown) => {
+  if (import.meta.env.DEV) {
+    console.debug(message, detail);
+  }
+};
+
+export const useWebSocket = (props: UseWebSocketProps = {}): WebSocketStatus => {
   const { onMessage, teamId } = props || {};
   const clientRef = useRef<Client | null>(null);
   const onMessageRef = useRef(onMessage);
@@ -24,8 +38,17 @@ export const useWebSocket = (props: UseWebSocketProps): WebSocketStatus => {
   }, [onMessage]);
 
   useEffect(() => {
+    if (!WS_BASE) {
+      setConnected(false);
+      return;
+    }
+
     const client = new Client({
       webSocketFactory: () => new SockJS(`${WS_BASE}/ws`),
+      reconnectDelay: 5000,
+      heartbeatIncoming: 10000,
+      heartbeatOutgoing: 10000,
+      debug: () => undefined,
       connectHeaders: {
         Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
       },
@@ -33,27 +56,30 @@ export const useWebSocket = (props: UseWebSocketProps): WebSocketStatus => {
         setConnected(true);
         if (client) {
           client.subscribe('/topic/leaderboard', (message) => {
-            onMessageRef.current?.('/topic/leaderboard', JSON.parse(message.body));
+            onMessageRef.current?.('/topic/leaderboard', parseMessageBody(message.body));
           });
           client.subscribe('/topic/team', (message) => {
-            onMessageRef.current?.('/topic/team', JSON.parse(message.body));
+            onMessageRef.current?.('/topic/team', parseMessageBody(message.body));
           });
           if (teamId) {
             client.subscribe(`/topic/team/${teamId}`, (message) => {
-              onMessageRef.current?.(`/topic/team/${teamId}`, JSON.parse(message.body));
+              onMessageRef.current?.(`/topic/team/${teamId}`, parseMessageBody(message.body));
             });
           }
           client.subscribe('/user/queue/private', (message) => {
-            onMessageRef.current?.('/user/queue/private', JSON.parse(message.body));
+            onMessageRef.current?.('/user/queue/private', parseMessageBody(message.body));
           });
         }
       },
       onStompError: (frame) => {
-        console.error('STOMP error', frame);
+        reportRealtimeIssue('Realtime broker rejected the connection.', frame);
         setConnected(false);
       },
-      onWebSocketError: () => {
-        console.error('WebSocket error');
+      onWebSocketClose: () => {
+        setConnected(false);
+      },
+      onWebSocketError: (event) => {
+        reportRealtimeIssue('Realtime socket transport error.', event);
         setConnected(false);
       },
     });
@@ -65,10 +91,11 @@ export const useWebSocket = (props: UseWebSocketProps): WebSocketStatus => {
       if (clientRef.current) {
         clientRef.current.deactivate();
       }
+      clientRef.current = null;
+      setConnected(false);
     };
   }, [teamId]);
 
   return { connected, socket: clientRef.current };
 };
-
 

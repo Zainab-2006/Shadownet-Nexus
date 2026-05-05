@@ -20,6 +20,8 @@ const passwordRequirements = [
   { label: 'Contains special character', test: (p: string) => /[^A-Za-z0-9]/.test(p) },
 ];
 
+const codenamePattern = /^[A-Za-z0-9_-]{3,32}$/;
+
 const Register = () => {
   const navigate = useNavigate();
   const { openNarrator } = useNarrator();
@@ -52,6 +54,11 @@ const handleOpenOnboarding = useCallback(() => {
 
     if (!username || !normalizedEmail || !password || !confirmPassword) {
       setError('Please fill in all fields');
+      return;
+    }
+
+    if (!codenamePattern.test(username)) {
+      setError('Codename must be 3-32 characters using only letters, numbers, _ or -.');
       return;
     }
 

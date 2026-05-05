@@ -130,8 +130,8 @@ server:
 
 app:
   security:
-    require-ssl: true
-    require-email-verification: true
+    require-ssl: ${REQUIRE_SSL:true}
+    require-email-verification: ${REQUIRE_EMAIL_VERIFICATION:false}
 
 ---
 spring:
