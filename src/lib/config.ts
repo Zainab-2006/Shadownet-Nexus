@@ -1,4 +1,4 @@
-const DEFAULT_API_ORIGIN = 'https://shadownet-nexus-mecf.onrender.com';
+const DEFAULT_API_ORIGIN = 'https://shadownet-nexus-3m2s.onrender.com';
 const BROWSER_ORIGIN = typeof window !== 'undefined' ? window.location.origin : DEFAULT_API_ORIGIN;
 
 const normalizeApiOrigin = (value?: string): string => {
