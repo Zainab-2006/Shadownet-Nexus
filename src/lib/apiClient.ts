@@ -1,47 +1,74 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'axios';
+import axios, {
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
+  AxiosError,
+  InternalAxiosRequestConfig,
+} from 'axios';
 import { API_BASE } from './config';
 
-const normalizeApiPath = (url: string): string => {
-  if (url.startsWith('/api/')) {
-    return url.slice(4);
+const PUBLIC_AUTH_PATHS = new Set([
+  '/login',
+  '/register',
+  '/request-password-reset',
+  '/reset-password',
+  '/verify-email',
+]);
+
+const stripApiPrefix = (pathname: string): string => {
+  if (pathname === '/api') {
+    return '/';
   }
-  return url;
+
+  return pathname.startsWith('/api/') ? pathname.slice(4) : pathname;
+};
+
+const normalizeApiPath = (url: string): string => {
+  try {
+    const parsedUrl = new URL(url, 'http://localhost');
+    const normalizedPath = stripApiPrefix(parsedUrl.pathname);
+    return `${normalizedPath}${parsedUrl.search}${parsedUrl.hash}`;
+  } catch {
+    return stripApiPrefix(url);
+  }
+};
+
+const getNormalizedPathname = (url?: string): string | undefined => {
+  if (!url) {
+    return undefined;
+  }
+
+  try {
+    return stripApiPrefix(new URL(url, 'http://localhost').pathname);
+  } catch {
+    return stripApiPrefix(url.split('?')[0].split('#')[0]);
+  }
 };
 
 const isPublicAuthPath = (url?: string): boolean => {
-  if (!url) {
-    return false;
-  }
-
-  const normalized = normalizeApiPath(url);
-  return normalized === '/login'
-    || normalized === '/register'
-    || normalized === '/request-password-reset'
-    || normalized === '/reset-password'
-    || normalized === '/verify-email';
+  const pathname = getNormalizedPathname(url);
+  return pathname ? PUBLIC_AUTH_PATHS.has(pathname) : false;
 };
 
 type RequestConfigWithBody = AxiosRequestConfig & { body?: unknown };
 
 const toAxiosConfig = (url: string, config?: RequestConfigWithBody): AxiosRequestConfig => {
+  const { body, ...restConfig } = config || {};
   const nextConfig: AxiosRequestConfig = {
-    ...config,
+    ...restConfig,
     url: normalizeApiPath(url),
   };
 
-  if ('body' in (config || {}) && config?.body !== undefined && typeof nextConfig.data === 'undefined') {
-    const rawBody = config.body as unknown;
-    if (typeof rawBody === 'string') {
+  if (body !== undefined && typeof nextConfig.data === 'undefined') {
+    if (typeof body === 'string') {
       try {
-        nextConfig.data = JSON.parse(rawBody);
-      } catch (e) {
-        nextConfig.data = rawBody;
+        nextConfig.data = JSON.parse(body);
+      } catch {
+        nextConfig.data = body;
       }
     } else {
-      nextConfig.data = rawBody;
+      nextConfig.data = body;
     }
-    const configWithBody = nextConfig as AxiosRequestConfig & { body?: unknown };
-    delete configWithBody.body;
   }
 
   return nextConfig;
