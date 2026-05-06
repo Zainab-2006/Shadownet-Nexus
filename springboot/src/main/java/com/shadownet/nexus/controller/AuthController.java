@@ -183,9 +183,12 @@ public class AuthController {
 
         try {
             String userId = jwtUtil.extractUserId(token);
-            User user = userRepository.findById(userId).orElse(null);
-            if (user != null) {
-                response.setUser(new AuthResponse.AuthUser(user.getId(), user.getUsername(), user.getDisplayName()));
+            if (userId != null) {
+                User user = userRepository.findById(userId).orElse(null);
+                if (user != null) {
+                    response.setUser(
+                            new AuthResponse.AuthUser(user.getId(), user.getUsername(), user.getDisplayName()));
+                }
             }
         } catch (Exception e) {
             logger.warn("Unable to enrich auth response: {}", e.getMessage());

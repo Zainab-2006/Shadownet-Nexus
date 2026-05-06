@@ -50,10 +50,14 @@ public class SecurityConfig {
         return rateLimitingBuckets.computeIfAbsent(key, k -> {
             if (k.contains("login") || k.contains("register")) {
                 Bandwidth limit = Bandwidth.classic(5, Refill.intervally(5, Duration.ofMinutes(1)));
-                return Bucket.builder().addLimit(limit).build();
+                return Bucket.builder()
+                        .addLimit(limit)
+                        .build();
             } else {
                 Bandwidth limit = Bandwidth.classic(100, Refill.intervally(100, Duration.ofMinutes(1)));
-                return Bucket.builder().addLimit(limit).build();
+                return Bucket.builder()
+                        .addLimit(limit)
+                        .build();
             }
         });
     }
