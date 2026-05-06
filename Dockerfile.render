@@ -5,13 +5,18 @@ WORKDIR /app
 COPY springboot/pom.xml .
 COPY springboot/src ./src
 RUN mvn -B -DskipTests package
+RUN javac src/main/docker/RenderPortProxy.java -d /app/proxy
 
 FROM eclipse-temurin:17-jre-jammy
 
 WORKDIR /app
 
 COPY --from=build /app/target/shadownet-nexus-1.0.0.jar /app/app.jar
+COPY --from=build /app/proxy /app/proxy
 
-EXPOSE 3001
+ENV APP_PORT=18080
+ENV PORT=10000
 
-ENTRYPOINT ["sh", "-c", "java -Dserver.port=${PORT:-3001} -Dserver.address=0.0.0.0 -jar /app/app.jar"]
+EXPOSE 10000
+
+ENTRYPOINT ["sh", "-c", "java -Dserver.port=${APP_PORT:-18080} -Dserver.address=127.0.0.1 -jar /app/app.jar & java -cp /app/proxy RenderPortProxy"]
