@@ -150,6 +150,25 @@ const Points = () => {
   );
 };
 
+const StaticHeroBackdrop = () => (
+  <div className="absolute inset-0 overflow-hidden bg-[radial-gradient(circle_at_50%_35%,hsl(var(--primary)/0.16),transparent_32%),linear-gradient(180deg,hsl(230_35%_8%),hsl(var(--background))_78%)]">
+    <div className="absolute inset-0 grid-pattern opacity-20" />
+    <div className="absolute left-1/2 top-[18%] h-72 w-72 -translate-x-1/2 rounded-full border border-primary/20 shadow-[0_0_80px_hsl(var(--primary)/0.20)]" />
+    <div className="absolute bottom-0 left-1/2 h-64 w-[min(900px,90vw)] -translate-x-1/2 bg-[linear-gradient(90deg,transparent,hsl(var(--primary)/0.15),transparent)] blur-2xl" />
+    {Array.from({ length: 14 }).map((_, index) => (
+      <div
+        key={index}
+        className="absolute bottom-0 w-10 border border-primary/10 bg-card/30 shadow-[0_0_18px_hsl(var(--primary)/0.10)]"
+        style={{
+          height: `${70 + (index % 5) * 34}px`,
+          left: `${6 + index * 7}%`,
+          opacity: 0.35 + (index % 4) * 0.08,
+        }}
+      />
+    ))}
+  </div>
+);
+
 interface HeroSceneProps {
   className?: string;
 }
@@ -158,12 +177,19 @@ const HeroScene = ({ className = '' }: HeroSceneProps) => {
   const gameContext = useGame();
   const selectedOperator = gameContext?.selectedOperator || null;
   const [isLowPerf, setIsLowPerf] = useState(false);
+  const [isWebGlUnavailable, setIsWebGlUnavailable] = useState(false);
   
   useEffect(() => {
     // Simple performance detection
     const checkPerformance = () => {
       const canvas = document.createElement('canvas');
-      const gl = canvas.getContext('webgl');
+      const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+      if (!gl) {
+        setIsWebGlUnavailable(true);
+        canvas.remove();
+        return;
+      }
+
       if (gl) {
         const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
         if (debugInfo) {
@@ -173,6 +199,8 @@ const HeroScene = ({ className = '' }: HeroSceneProps) => {
             setIsLowPerf(true);
           }
         }
+
+        gl.getExtension('WEBGL_lose_context')?.loseContext();
       }
       canvas.remove();
     };
@@ -182,34 +210,40 @@ const HeroScene = ({ className = '' }: HeroSceneProps) => {
   
   return (
     <div className={`absolute inset-0 ${className}`}>
-      <Canvas
-        dpr={isLowPerf ? 1 : [1, 2]}
-        gl={{ 
-          antialias: !isLowPerf,
-          alpha: true,
-          powerPreference: isLowPerf ? 'low-power' : 'high-performance'
-        }}
-        onCreated={({ gl }) => {
-          gl.domElement.addEventListener('webglcontextlost', (event) => {
-            event.preventDefault();
-          });
-        }}
-      >
-        <Suspense fallback={<LoadingFallback />}>
-          <PerspectiveCamera
-            makeDefault
-            position={[0, 4, 12]}
-            fov={60}
-            near={0.1}
-            far={100}
-          />
-          <CameraController />
-          <CyberpunkCity />
-          <CharacterModel characterId={selectedOperator?.id || null} visible={!!selectedOperator} />
-          <Environment preset="night" />
-          <Preload all />
-        </Suspense>
-      </Canvas>
+      {isWebGlUnavailable ? (
+        <StaticHeroBackdrop />
+      ) : (
+        <Canvas
+          dpr={isLowPerf ? 1 : [1, 1.5]}
+          gl={{
+            antialias: !isLowPerf,
+            alpha: true,
+            powerPreference: isLowPerf ? 'low-power' : 'high-performance',
+            failIfMajorPerformanceCaveat: false,
+          }}
+          onCreated={({ gl }) => {
+            gl.domElement.addEventListener('webglcontextlost', (event) => {
+              event.preventDefault();
+              setIsWebGlUnavailable(true);
+            });
+          }}
+        >
+          <Suspense fallback={<LoadingFallback />}>
+            <PerspectiveCamera
+              makeDefault
+              position={[0, 4, 12]}
+              fov={60}
+              near={0.1}
+              far={100}
+            />
+            <CameraController />
+            <CyberpunkCity />
+            <CharacterModel characterId={selectedOperator?.id || null} visible={!!selectedOperator} />
+            <Environment preset="night" />
+            <Preload all />
+          </Suspense>
+        </Canvas>
+      )}
       
       {/* Gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent pointer-events-none" />
