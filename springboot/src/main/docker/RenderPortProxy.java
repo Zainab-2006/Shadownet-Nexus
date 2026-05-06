@@ -7,6 +7,7 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -15,6 +16,8 @@ public final class RenderPortProxy {
     private static final int CONNECT_TIMEOUT_MS = 750;
     private static final int BOOT_GRACE_SECONDS = intEnv("BOOT_HEALTH_GRACE_SECONDS", 240);
     private static final long STARTED_AT = Instant.now().getEpochSecond();
+    private static final String DEFAULT_ALLOWED_ORIGINS =
+            "https://shadownet-nexus.vercel.app,https://*.vercel.app,https://shadownet-frontend.onrender.com";
 
     private RenderPortProxy() {
     }
@@ -72,21 +75,39 @@ public final class RenderPortProxy {
     private static void respondWhileBooting(Socket client) {
         try {
             client.setSoTimeout(250);
-            String requestLine = firstRequestLine(client.getInputStream()).toLowerCase(Locale.ROOT);
+            RequestInfo request = readRequest(client.getInputStream());
+            String requestLine = request.requestLine().toLowerCase(Locale.ROOT);
+            boolean optionsRequest = requestLine.startsWith("options ");
             boolean healthRequest = requestLine.startsWith("get /health ") || requestLine.startsWith("get /actuator/health ");
             boolean withinGrace = Instant.now().getEpochSecond() - STARTED_AT <= BOOT_GRACE_SECONDS;
 
-            if (healthRequest && withinGrace) {
-                writeResponse(client.getOutputStream(), 200, "{\"status\":\"starting\"}");
+            if (optionsRequest) {
+                writeResponse(client.getOutputStream(), 204, "", request.origin());
+            } else if (healthRequest && withinGrace) {
+                writeResponse(client.getOutputStream(), 200, "{\"status\":\"starting\"}", request.origin());
             } else {
-                writeResponse(client.getOutputStream(), 503, "{\"status\":\"starting\",\"message\":\"Backend is still booting\"}");
+                writeResponse(client.getOutputStream(), 503,
+                        "{\"status\":\"starting\",\"message\":\"Backend is still booting\"}", request.origin());
             }
         } catch (IOException ignored) {
             close(client);
         }
     }
 
-    private static String firstRequestLine(InputStream input) throws IOException {
+    private static RequestInfo readRequest(InputStream input) throws IOException {
+        String requestLine = readLine(input);
+        String origin = "";
+        String line;
+        while (!(line = readLine(input)).isBlank()) {
+            int separator = line.indexOf(':');
+            if (separator > 0 && "origin".equalsIgnoreCase(line.substring(0, separator).trim())) {
+                origin = line.substring(separator + 1).trim();
+            }
+        }
+        return new RequestInfo(requestLine, origin);
+    }
+
+    private static String readLine(InputStream input) throws IOException {
         StringBuilder line = new StringBuilder();
         while (line.length() < 4096) {
             int next;
@@ -105,16 +126,53 @@ public final class RenderPortProxy {
         return line.toString();
     }
 
-    private static void writeResponse(OutputStream output, int status, String body) throws IOException {
+    private static void writeResponse(OutputStream output, int status, String body, String origin) throws IOException {
         byte[] bodyBytes = body.getBytes(StandardCharsets.UTF_8);
-        String reason = status == 200 ? "OK" : "Service Unavailable";
+        String reason = switch (status) {
+            case 200 -> "OK";
+            case 204 -> "No Content";
+            default -> "Service Unavailable";
+        };
         String headers = "HTTP/1.1 " + status + " " + reason + "\r\n"
                 + "Content-Type: application/json\r\n"
                 + "Content-Length: " + bodyBytes.length + "\r\n"
+                + corsHeaders(origin)
                 + "Connection: close\r\n\r\n";
         output.write(headers.getBytes(StandardCharsets.US_ASCII));
         output.write(bodyBytes);
         output.flush();
+    }
+
+    private static String corsHeaders(String origin) {
+        if (!isAllowedOrigin(origin)) {
+            return "";
+        }
+        return "Access-Control-Allow-Origin: " + origin + "\r\n"
+                + "Access-Control-Allow-Credentials: true\r\n"
+                + "Access-Control-Allow-Methods: GET,POST,PUT,DELETE,OPTIONS\r\n"
+                + "Access-Control-Allow-Headers: *\r\n"
+                + "Vary: Origin\r\n";
+    }
+
+    private static boolean isAllowedOrigin(String origin) {
+        if (origin == null || origin.isBlank()) {
+            return false;
+        }
+        String allowedOrigins = System.getenv().getOrDefault("CORS_ORIGINS", DEFAULT_ALLOWED_ORIGINS);
+        return Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(value -> !value.isBlank())
+                .anyMatch(allowed -> origin.equals(allowed) || matchesWildcardOrigin(origin, allowed));
+    }
+
+    private static boolean matchesWildcardOrigin(String origin, String allowed) {
+        int wildcard = allowed.indexOf('*');
+        if (wildcard < 0) {
+            return false;
+        }
+        String prefix = allowed.substring(0, wildcard);
+        String suffix = allowed.substring(wildcard + 1);
+        return origin.startsWith(prefix) && origin.endsWith(suffix);
     }
 
     private static int intEnv(String name, int fallback) {
@@ -131,5 +189,8 @@ public final class RenderPortProxy {
         } catch (IOException ignored) {
             // Best effort cleanup.
         }
+    }
+
+    private record RequestInfo(String requestLine, String origin) {
     }
 }
