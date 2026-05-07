@@ -6,6 +6,7 @@ import axios, {
   InternalAxiosRequestConfig,
 } from 'axios';
 import { API_BASE } from './config';
+import { waitForBackendReady } from './backendHealth';
 
 const stripApiPrefix = (pathname: string): string => {
   if (pathname === '/api') {
@@ -72,7 +73,8 @@ class ApiClient {
     });
 
     this.client.interceptors.request.use(
-      (config: InternalAxiosRequestConfig) => {
+      async (config: InternalAxiosRequestConfig) => {
+        await waitForBackendReady();
         const requestConfig = config as InternalRequestConfig;
         const token = localStorage.getItem('token');
         if (token && !requestConfig.skipAuth) {

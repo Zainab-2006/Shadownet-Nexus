@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import { WS_BASE } from '@/lib/config';
+import { waitForBackendReady } from '@/lib/backendHealth';
 
 interface UseWebSocketProps {
   onMessage?: (topic: string, data: unknown) => void;
@@ -39,6 +40,7 @@ export const useWebSocket = (props: UseWebSocketProps = {}): WebSocketStatus => 
   }, [onMessage]);
 
   useEffect(() => {
+    let cancelled = false;
     let attempts = 0;
     const maxAttempts = 6;
 
@@ -98,10 +100,19 @@ export const useWebSocket = (props: UseWebSocketProps = {}): WebSocketStatus => 
       },
     });
 
-    client.activate();
+    waitForBackendReady()
+      .then(() => {
+        if (!cancelled) {
+          client.activate();
+        }
+      })
+      .catch((error: unknown) => {
+        reportRealtimeIssue('Realtime connection delayed while backend starts.', error);
+      });
     clientRef.current = client;
 
     return () => {
+      cancelled = true;
       if (clientRef.current) {
         clientRef.current.deactivate();
       }
