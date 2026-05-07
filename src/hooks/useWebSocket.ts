@@ -38,11 +38,6 @@ export const useWebSocket = (props: UseWebSocketProps = {}): WebSocketStatus => 
   }, [onMessage]);
 
   useEffect(() => {
-    if (!WS_BASE) {
-      setConnected(false);
-      return;
-    }
-
     const client = new Client({
       webSocketFactory: () => new SockJS(`${WS_BASE}/ws`),
       reconnectDelay: 5000,
@@ -98,4 +93,3 @@ export const useWebSocket = (props: UseWebSocketProps = {}): WebSocketStatus => 
 
   return { connected, socket: clientRef.current };
 };
-
