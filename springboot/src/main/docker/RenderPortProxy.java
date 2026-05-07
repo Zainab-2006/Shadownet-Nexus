@@ -78,7 +78,9 @@ public final class RenderPortProxy {
             RequestInfo request = readRequest(client.getInputStream());
             String requestLine = request.requestLine().toLowerCase(Locale.ROOT);
             boolean optionsRequest = requestLine.startsWith("options ");
-            boolean healthRequest = requestLine.startsWith("get /health ") || requestLine.startsWith("get /actuator/health ");
+            boolean healthRequest = requestLine.startsWith("get /health ")
+                    || requestLine.startsWith("get /api/health ")
+                    || requestLine.startsWith("get /actuator/health ");
             boolean withinGrace = Instant.now().getEpochSecond() - STARTED_AT <= BOOT_GRACE_SECONDS;
 
             if (optionsRequest) {

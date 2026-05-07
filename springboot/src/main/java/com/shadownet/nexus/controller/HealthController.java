@@ -17,6 +17,11 @@ public class HealthController {
                 "db", "mysql"));
     }
 
+    @GetMapping("/api/health")
+    public ResponseEntity<Map<String, Object>> apiHealth() {
+        return health();
+    }
+
     @GetMapping("/metrics")
     public ResponseEntity<Map<String, Object>> metrics() {
         // Simple metrics

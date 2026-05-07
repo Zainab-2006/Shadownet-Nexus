@@ -15,12 +15,21 @@ const normalizeApiBase = (value?: string): string => {
   return `${rawValue}/api`;
 };
 
+const shouldUseSameOriginApi = (): boolean => {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  const host = window.location.hostname;
+  return host === 'shadownet-nexus.vercel.app' || host.endsWith('.vercel.app');
+};
+
 const normalizeWsBase = (value?: string): string => {
   const rawValue = trimTrailingSlashes(value?.trim() || '');
   return rawValue.endsWith('/ws') ? rawValue.slice(0, -3) : rawValue;
 };
 
-export const API_BASE = normalizeApiBase(import.meta.env?.VITE_API_BASE_URL);
+export const API_BASE = shouldUseSameOriginApi() ? '/api' : normalizeApiBase(import.meta.env?.VITE_API_BASE_URL);
 export const WS_BASE = normalizeWsBase(import.meta.env?.VITE_WS_BASE_URL);
 
 export const ENV = {

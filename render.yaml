@@ -56,7 +56,7 @@ services:
       - key: REQUIRE_SSL
         value: "true"
       - key: REQUIRE_EMAIL_VERIFICATION
-        value: "true"
+        value: "false"
       - key: SWAGGER_ENABLED
         value: "false"
       - key: API_DOCS_ENABLED

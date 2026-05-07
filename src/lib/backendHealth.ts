@@ -7,14 +7,6 @@ type HealthResponse = {
 const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 const healthUrl = (): string => {
-  if (API_BASE === '/api') {
-    return '/health';
-  }
-
-  if (API_BASE.endsWith('/api')) {
-    return `${API_BASE.slice(0, -4)}/health`;
-  }
-
   return `${API_BASE.replace(/\/+$/, '')}/health`;
 };
 
