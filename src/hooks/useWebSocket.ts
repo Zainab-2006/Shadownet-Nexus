@@ -22,7 +22,7 @@ const parseMessageBody = (body: string): unknown => {
 };
 
 const reportRealtimeIssue = (message: string, detail?: unknown) => {
-  if ((import.meta as any).env?.DEV) {
+  if (import.meta.env?.DEV) {
     console.debug(message, detail);
   }
 };

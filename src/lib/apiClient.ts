@@ -34,6 +34,17 @@ type InternalRequestConfig = InternalAxiosRequestConfig & {
   skipAuth?: boolean;
 };
 
+type RetryableAxiosError = AxiosError & {
+  retryAfter?: string;
+  isServiceUnavailable?: boolean;
+  retryable503?: boolean;
+};
+
+const retryAfterHeader = (error: AxiosError): string | undefined => {
+  const value = error.response?.headers?.['retry-after'];
+  return Array.isArray(value) ? value[0] : value;
+};
+
 const toAxiosConfig = (url: string, config: RequestConfigWithBody = {}): RequestConfigWithBody => {
   const { body, ...restConfig } = config;
   const nextConfig: RequestConfigWithBody = {
@@ -91,9 +102,10 @@ class ApiClient {
         // (We only add metadata; we don't change behavior here to keep changes minimal.)
         if (error.response?.status === 503) {
           const method = (error.config as AxiosRequestConfig | undefined)?.method?.toUpperCase?.() ?? '';
-          (error as any).retryAfter = (error.response?.headers as any)?.['retry-after'];
-          (error as any).isServiceUnavailable = true;
-          (error as any).retryable503 = method === 'GET';
+          const retryableError = error as RetryableAxiosError;
+          retryableError.retryAfter = retryAfterHeader(error);
+          retryableError.isServiceUnavailable = true;
+          retryableError.retryable503 = method === 'GET';
         }
 
 
@@ -138,13 +150,14 @@ export const apiFetchWithBackoff = async <T = unknown>(
       return await apiFetch<T>(url, config);
     } catch (err) {
       lastErr = err;
-      const status = (err as any)?.response?.status;
+      const axiosError = axios.isAxiosError(err) ? err : undefined;
+      const status = axiosError?.response?.status;
       const method = ((config?.method ?? 'GET') as string).toUpperCase();
 
       if (!(status === 503 && method === 'GET')) throw err;
       if (i === attempts - 1) throw err;
 
-      const retryAfterRaw = (err as any)?.response?.headers?.['retry-after'];
+      const retryAfterRaw = axiosError ? retryAfterHeader(axiosError) : undefined;
       const retryAfterMs = retryAfterRaw ? Number(retryAfterRaw) * 1000 : 0;
 
       const expDelay = baseDelayMs * Math.pow(2, i);
