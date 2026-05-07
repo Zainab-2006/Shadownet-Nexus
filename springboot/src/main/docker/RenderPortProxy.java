@@ -82,12 +82,14 @@ public final class RenderPortProxy {
             boolean withinGrace = Instant.now().getEpochSecond() - STARTED_AT <= BOOT_GRACE_SECONDS;
 
             if (optionsRequest) {
-                writeResponse(client.getOutputStream(), 204, "", request.origin());
+                writeResponse(client.getOutputStream(), 204, "", request.origin(), request.requestHeaders());
             } else if (healthRequest && withinGrace) {
-                writeResponse(client.getOutputStream(), 200, "{\"status\":\"starting\"}", request.origin());
+                writeResponse(client.getOutputStream(), 200, "{\"status\":\"starting\"}", request.origin(),
+                        request.requestHeaders());
             } else {
                 writeResponse(client.getOutputStream(), 503,
-                        "{\"status\":\"starting\",\"message\":\"Backend is still booting\"}", request.origin());
+                        "{\"status\":\"starting\",\"message\":\"Backend is still booting\"}", request.origin(),
+                        request.requestHeaders());
             }
         } catch (IOException ignored) {
             close(client);
@@ -97,14 +99,18 @@ public final class RenderPortProxy {
     private static RequestInfo readRequest(InputStream input) throws IOException {
         String requestLine = readLine(input);
         String origin = "";
+        String requestHeaders = "";
         String line;
         while (!(line = readLine(input)).isBlank()) {
             int separator = line.indexOf(':');
             if (separator > 0 && "origin".equalsIgnoreCase(line.substring(0, separator).trim())) {
                 origin = line.substring(separator + 1).trim();
+            } else if (separator > 0
+                    && "access-control-request-headers".equalsIgnoreCase(line.substring(0, separator).trim())) {
+                requestHeaders = line.substring(separator + 1).trim();
             }
         }
-        return new RequestInfo(requestLine, origin);
+        return new RequestInfo(requestLine, origin, requestHeaders);
     }
 
     private static String readLine(InputStream input) throws IOException {
@@ -126,7 +132,8 @@ public final class RenderPortProxy {
         return line.toString();
     }
 
-    private static void writeResponse(OutputStream output, int status, String body, String origin) throws IOException {
+    private static void writeResponse(OutputStream output, int status, String body, String origin,
+            String requestHeaders) throws IOException {
         byte[] bodyBytes = body.getBytes(StandardCharsets.UTF_8);
         String reason = switch (status) {
             case 200 -> "OK";
@@ -136,22 +143,29 @@ public final class RenderPortProxy {
         String headers = "HTTP/1.1 " + status + " " + reason + "\r\n"
                 + "Content-Type: application/json\r\n"
                 + "Content-Length: " + bodyBytes.length + "\r\n"
-                + corsHeaders(origin)
+                + corsHeaders(origin, requestHeaders)
                 + "Connection: close\r\n\r\n";
         output.write(headers.getBytes(StandardCharsets.US_ASCII));
         output.write(bodyBytes);
         output.flush();
     }
 
-    private static String corsHeaders(String origin) {
+    private static String corsHeaders(String origin, String requestHeaders) {
         if (!isAllowedOrigin(origin)) {
             return "";
         }
         return "Access-Control-Allow-Origin: " + origin + "\r\n"
                 + "Access-Control-Allow-Credentials: true\r\n"
                 + "Access-Control-Allow-Methods: GET,POST,PUT,DELETE,OPTIONS\r\n"
-                + "Access-Control-Allow-Headers: *\r\n"
+                + "Access-Control-Allow-Headers: " + allowedHeaders(requestHeaders) + "\r\n"
                 + "Vary: Origin\r\n";
+    }
+
+    private static String allowedHeaders(String requestHeaders) {
+        if (requestHeaders == null || requestHeaders.isBlank()) {
+            return "Authorization,Content-Type,Accept,Origin,X-Requested-With,Cache-Control,Pragma";
+        }
+        return requestHeaders;
     }
 
     private static boolean isAllowedOrigin(String origin) {
@@ -191,6 +205,6 @@ public final class RenderPortProxy {
         }
     }
 
-    private record RequestInfo(String requestLine, String origin) {
+    private record RequestInfo(String requestLine, String origin, String requestHeaders) {
     }
 }

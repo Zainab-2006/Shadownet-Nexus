@@ -132,7 +132,14 @@ public class SecurityConfig {
                 .filter(origin -> !origin.isBlank())
                 .toList());
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(Arrays.asList("*"));
+        config.setAllowedHeaders(Arrays.asList(
+                "Authorization",
+                "Content-Type",
+                "Accept",
+                "Origin",
+                "X-Requested-With",
+                "Cache-Control",
+                "Pragma"));
         config.setExposedHeaders(Arrays.asList("Retry-After"));
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
