@@ -22,10 +22,11 @@ const parseMessageBody = (body: string): unknown => {
 };
 
 const reportRealtimeIssue = (message: string, detail?: unknown) => {
-  if (import.meta.env.DEV) {
+  if ((import.meta as any).env?.DEV) {
     console.debug(message, detail);
   }
 };
+
 
 export const useWebSocket = (props: UseWebSocketProps = {}): WebSocketStatus => {
   const { onMessage, teamId } = props || {};
@@ -38,10 +39,28 @@ export const useWebSocket = (props: UseWebSocketProps = {}): WebSocketStatus => 
   }, [onMessage]);
 
   useEffect(() => {
+    let attempts = 0;
+    const maxAttempts = 6;
+
     const client = new Client({
       webSocketFactory: () => new SockJS(`${WS_BASE}/ws`),
-      reconnectDelay: 5000,
+      // Avoid infinite reconnect hammering when backend is unhealthy.
+      reconnectDelay: 3000,
+      // Cap reconnect attempts to prevent endless 503 spam.
+      beforeConnect: () => {
+        attempts += 1;
+        if (attempts > maxAttempts) {
+          // If we keep failing, deactivate so we stop reconnecting.
+          try {
+            client.deactivate();
+          } catch {
+            // ignore
+          }
+        }
+      },
+
       heartbeatIncoming: 10000,
+
       heartbeatOutgoing: 10000,
       debug: () => undefined,
       connectHeaders: {

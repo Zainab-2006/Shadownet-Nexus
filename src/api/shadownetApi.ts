@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { apiFetch } from '../lib/apiClient';
+import { apiFetch, apiFetchWithBackoff } from '../lib/apiClient';
 import type { User } from './userApi';
 import { prepareMutationContext } from './queryUtils';
 import { parseJsonArray, parseJsonObject } from '@/utils/safeJson';
@@ -70,23 +70,27 @@ const normalizeMission = (mission: BackendMission) => {
 
 export const useUser = () => useQuery({
   queryKey: ['user'],
-  queryFn: () => apiFetch<User>('/users/me'),
+  queryFn: () => apiFetchWithBackoff<User>('/users/me'),
 });
 
 export const useMissions = () => useQuery({
   queryKey: ['missions'],
-  queryFn: () => apiFetch<BackendMission[]>('/missions').then((missions) => missions.map(normalizeMission)),
+  queryFn: () =>
+    apiFetchWithBackoff<BackendMission[]>('/missions').then((missions) => missions.map(normalizeMission)),
 });
+
 
 export const useMission = (missionId?: string) => useQuery({
   queryKey: ['mission', missionId],
-  queryFn: () => apiFetch<BackendMission>(`/missions/${missionId}`).then(normalizeMission),
+  queryFn: () => apiFetchWithBackoff<BackendMission>(`/missions/${missionId}`).then(normalizeMission),
+
   enabled: !!missionId,
 });
 
 export const useMissionRuntime = (missionId?: string) => useQuery({
   queryKey: ['missionRuntime', missionId],
-  queryFn: () => apiFetch<MissionRuntimeState>(`/missions/${missionId}/runtime`),
+  queryFn: () => apiFetchWithBackoff<MissionRuntimeState>(`/missions/${missionId}/runtime`),
+
   enabled: !!missionId,
   refetchInterval: (query) => query.state.data?.status === 'active' ? 10000 : false,
 });

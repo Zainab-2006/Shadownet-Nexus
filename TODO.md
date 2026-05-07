@@ -1,14 +1,11 @@
-**TASK COMPLETE**
+# TODO (Networking 503 + WebSocket failures)
 
-Local full-stack deployed successfully:
-- Frontend: http://localhost:5174
-- Backend: http://localhost:3002
-- DB healthy on 3305
+- [x] Inspect frontend + backend networking paths
+- [x] Confirm backend SockJS/STOMP endpoint mapping is `/ws` and health endpoint is `/health`
+- [x] Update frontend `src/lib/config.ts` to read `VITE_API_BASE_URL` / `VITE_WS_BASE_URL` (with defaults)
+- [x] Reduce websocket reconnect hammering in `src/hooks/useWebSocket.ts` (lower delay + cap attempts)
+- [x] Add limited retry/backoff behavior for 503 on GET requests (API calls) to reduce log spam
 
-Render backend source of truth: Dockerfile.render at repo root with Docker build context ".". The backend connects to Aiven through Render env vars in the Spring prod profile, not through docker-compose.
-
-For Render deploy: Use render.yaml, set DB_PASSWORD/EMAIL_ENCRYPTION_KEY secrets.
-
-
-
+- [ ] Build frontend and run basic smoke test
+- [ ] Validate in browser console: `/api/*` and `/ws/info` no longer spam 503
 

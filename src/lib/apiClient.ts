@@ -86,9 +86,21 @@ class ApiClient {
             window.location.href = '/login';
           }
         }
+
+        // Mark 503s with a flag so React Query can decide whether/how to retry.
+        // (We only add metadata; we don't change behavior here to keep changes minimal.)
+        if (error.response?.status === 503) {
+          const method = (error.config as AxiosRequestConfig | undefined)?.method?.toUpperCase?.() ?? '';
+          (error as any).retryAfter = (error.response?.headers as any)?.['retry-after'];
+          (error as any).isServiceUnavailable = true;
+          (error as any).retryable503 = method === 'GET';
+        }
+
+
         return Promise.reject(error);
       },
     );
+
   }
 
   request<T = unknown>(url: string, config?: RequestConfigWithBody): Promise<AxiosResponse<T>> {
@@ -108,4 +120,43 @@ export const apiFetch = async <T = unknown>(url: string, config?: RequestConfigW
   return response.data;
 };
 
+/**
+ * Helper for limited exponential backoff when backend returns 503.
+ * Use this in queryFn/methods that should be GET+idempotent.
+ */
+export const apiFetchWithBackoff = async <T = unknown>(
+  url: string,
+  config: RequestConfigWithBody = {},
+  opts: { attempts?: number; baseDelayMs?: number } = {},
+): Promise<T> => {
+  const attempts = opts.attempts ?? 3;
+  const baseDelayMs = opts.baseDelayMs ?? 500;
+
+  let lastErr: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await apiFetch<T>(url, config);
+    } catch (err) {
+      lastErr = err;
+      const status = (err as any)?.response?.status;
+      const method = ((config?.method ?? 'GET') as string).toUpperCase();
+
+      if (!(status === 503 && method === 'GET')) throw err;
+      if (i === attempts - 1) throw err;
+
+      const retryAfterRaw = (err as any)?.response?.headers?.['retry-after'];
+      const retryAfterMs = retryAfterRaw ? Number(retryAfterRaw) * 1000 : 0;
+
+      const expDelay = baseDelayMs * Math.pow(2, i);
+      const jitter = Math.floor(Math.random() * 150);
+      const delayMs = retryAfterMs > 0 ? retryAfterMs + jitter : expDelay + jitter;
+
+      await new Promise((r) => setTimeout(r, delayMs));
+    }
+  }
+
+  throw lastErr;
+};
+
 export default apiClient;
+
