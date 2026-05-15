@@ -105,7 +105,7 @@ spring:
         boot:
           allow_jdbc_metadata_access: ${HIBERNATE_ALLOW_JDBC_METADATA_ACCESS:false}
   flyway:
-    enabled: ${SPRING_FLYWAY_ENABLED:false}
+    enabled: ${SPRING_FLYWAY_ENABLED:true}
     connect-retries: 60
     connect-retries-interval: 5s
 
@@ -139,6 +139,8 @@ app:
   security:
     require-ssl: ${REQUIRE_SSL:true}
     require-email-verification: ${REQUIRE_EMAIL_VERIFICATION:false}
+  flyway:
+    fail-fast: ${APP_FLYWAY_FAIL_FAST:false}
 
 ---
 spring:
