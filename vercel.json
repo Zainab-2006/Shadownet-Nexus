@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://shadownet-nexus-3m2s.onrender.com/api/:path*"
+      "destination": "https://shadownet-nexus-zxw1.onrender.com/api/:path*"
     },
     {
       "source": "/ws/:path*",
-      "destination": "https://shadownet-nexus-3m2s.onrender.com/ws/:path*"
+      "destination": "https://shadownet-nexus-zxw1.onrender.com/ws/:path*"
     },
     {
       "source": "/(.*)",
